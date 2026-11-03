@@ -1060,7 +1060,7 @@ def create_launch_campaign(platforms, post_time, use_ai=False):
     for day_offset, title, details in LAUNCH_TASKS:
         action_url = ""
         if title.startswith("Send the launch email"):
-            action_url = "/admin?" + urllib.parse.urlencode({"bs": LAUNCH_EMAIL_SUBJECT, "bb": LAUNCH_EMAIL_BODY}) + "#emails"
+            action_url = "/admin/emails?" + urllib.parse.urlencode({"bs": LAUNCH_EMAIL_SUBJECT, "bb": LAUNCH_EMAIL_BODY})
         execute(
             "INSERT INTO tasks(campaign_id, due_date, title, details, action_url) VALUES (?, ?, ?, ?, ?)",
             (campaign_id, f"{launch + timedelta(days=day_offset):%Y-%m-%d}", title,
@@ -1224,40 +1224,228 @@ def scheduler_loop():
 # HTML pages
 # --------------------------------------------------------------------------
 CSS = """
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0b0d12;color:#e7e9ee}
-a{color:#8ab4ff}.wrap{max-width:1000px;margin:0 auto;padding:32px 20px}
-.hero{text-align:center;padding:60px 0 30px}.hero h1{font-size:44px;margin:0 0 12px}
-.hero p{font-size:19px;color:#a9b0bf;margin:0 0 28px}
-.card{background:#151924;border:1px solid #242a38;border-radius:14px;padding:22px;margin:14px 0}
-input,textarea,select{width:100%;padding:12px;border-radius:10px;border:1px solid #2c3446;background:#0f121a;color:#e7e9ee;font-size:15px;margin:6px 0}
-input[type=checkbox]{width:auto}textarea{min-height:110px;font-family:inherit}
-button,.btn{display:inline-block;padding:10px 16px;border-radius:10px;border:0;background:#5b8cff;color:#fff;font-weight:600;cursor:pointer;text-decoration:none;font-size:14px;margin:4px 4px 4px 0}
-.btn.alt{background:#2a3247}.btn.red{background:#b3404a}.btn.green{background:#2f9e62}.btn.purple{background:#7b5cff}
-.form{max-width:460px;margin:0 auto}.big{font-size:56px;font-weight:800;color:#5b8cff;margin:4px 0}
-.muted{color:#8b93a5}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
-.stat .num{font-size:30px;font-weight:700}table{width:100%;border-collapse:collapse;font-size:14px}
-td,th{padding:8px;border-bottom:1px solid #242a38;text-align:left;vertical-align:top}
-.pill{padding:2px 9px;border-radius:99px;font-size:12px;background:#2a3247}
-.pill.posted,.pill.sent{background:#1f5e3c}.pill.failed{background:#6e2a31}.pill.due,.pill.queued{background:#7a5a12}.pill.scheduled{background:#24427a}
-.over{color:#ff6b6b;font-weight:700}.bar{background:#5b8cff;height:14px;border-radius:4px}
-nav a{margin-right:16px}pre{white-space:pre-wrap;margin:0;font-family:inherit}
-.reward{padding:8px 0;border-bottom:1px solid #242a38}.reward.done{color:#6fe3a1}
-.notice{padding:12px 16px;border-radius:10px;background:#24427a;margin:12px auto;max-width:460px}
-.notice.ok{background:#1f5e3c}.notice.warn{background:#5e4a12}.notice.wide{max-width:none}
-details summary{cursor:pointer;color:#8ab4ff;margin:6px 0}code{background:#0f121a;padding:2px 6px;border-radius:6px}
+:root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f8fafc;--border:#e5e7eb;--border-strong:#d6dae1;--text:#0f172a;--text-2:#334155;
+--muted:#64748b;--accent:#4f46e5;--accent-hover:#4338ca;--accent-soft:#eef2ff;--accent-text:#4338ca;--success:#047857;
+--success-soft:#ecfdf5;--warn:#b45309;--warn-soft:#fffbeb;--danger:#dc2626;--danger-soft:#fef2f2;--radius:14px;
+--shadow:0 1px 2px rgba(15,23,42,.04),0 2px 8px rgba(15,23,42,.04)}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0d12;--surface:#11141b;--surface-2:#161a23;--border:#222734;--border-strong:#2e3445;
+--text:#f1f5f9;--text-2:#cbd5e1;--muted:#94a3b8;--accent:#6366f1;--accent-hover:#4f46e5;--accent-soft:rgba(129,140,248,.13);
+--accent-text:#a5b4fc;--success:#34d399;--success-soft:rgba(52,211,153,.1);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.1);
+--danger:#f87171;--danger-soft:rgba(248,113,113,.1);--shadow:none}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:14px;
+line-height:1.55;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:var(--accent-text);text-decoration:none}a:hover{text-decoration:underline}
+h1,h2,h3{margin:0;letter-spacing:-.02em;color:var(--text)}h1{font-size:26px;font-weight:700}h2{font-size:18px;font-weight:650}
+h3{font-size:15px;font-weight:600}p{margin:0}.muted{color:var(--muted)}.small{font-size:12.5px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;background:var(--surface-2);
+border:1px solid var(--border);padding:1px 6px;border-radius:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:9px;
+border:1px solid transparent;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;
+text-decoration:none!important;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s}
+.btn:hover{background:var(--accent-hover)}.btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.btn-secondary{background:var(--surface);color:var(--text-2);border-color:var(--border-strong)}.btn-secondary:hover{background:var(--surface-2)}
+.btn-ghost{background:transparent;color:var(--text-2)}.btn-ghost:hover{background:var(--surface-2)}
+.btn-danger{background:transparent;color:var(--danger)}.btn-danger:hover{background:var(--danger-soft)}
+.btn-sm{height:30px;padding:0 10px;font-size:12.5px}.btn-lg{height:46px;padding:0 22px;font-size:15px}.btn-block{width:100%}
+input,textarea,select{width:100%;font:inherit;font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border-strong);
+border-radius:9px;padding:9px 12px;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
+textarea{min-height:110px;resize:vertical;line-height:1.5}input[type=checkbox]{width:16px;height:16px;padding:0;accent-color:var(--accent)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.field label,.label{font-size:13px;font-weight:600;color:var(--text-2)}
+.help{font-size:12.5px;color:var(--muted)}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:160px}
+.between{justify-content:space-between}.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--border-strong);border-radius:999px;
+font-size:13px;cursor:pointer;background:var(--surface);user-select:none;color:var(--text-2)}
+.chip:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent-text)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-body{padding:20px}.card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;
+align-items:center;gap:12px}.card-head p{margin-top:2px;font-size:13px;color:var(--muted)}
+.stack>*+*{margin-top:18px}.grid{display:grid;gap:18px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:960px){.g2,.g3{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{padding:18px 20px}.stat-label{font-size:12.5px;color:var(--muted);font-weight:500}
+.stat-value{font-size:30px;font-weight:700;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat-hint{font-size:12px;color:var(--muted);margin-top:2px}
+table{width:100%;border-collapse:collapse}th{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;
+letter-spacing:.05em;text-align:left;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+td{padding:12px 20px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-2)}tr:last-child td{border-bottom:0}
+.num-table td:not(:first-child),.num-table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;
+background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);white-space:nowrap}
+.badge.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-posted,.b-sent,.b-on{background:var(--success-soft);color:var(--success);border-color:transparent}
+.b-due,.b-queued,.b-off{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.b-failed{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.b-scheduled{background:var(--accent-soft);color:var(--accent-text);border-color:transparent}
+.b-neutral{background:var(--surface-2);color:var(--muted);border-color:var(--border)}
+.alert{padding:12px 16px;border-radius:11px;font-size:13.5px;border:1px solid var(--border);background:var(--surface)}
+.alert-success{background:var(--success-soft);border-color:transparent;color:var(--success)}
+.alert-warn{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.alert-danger{background:var(--danger-soft);border-color:transparent;color:var(--danger)}
+.alert-info{background:var(--accent-soft);border-color:transparent;color:var(--accent-text)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}.empty h3{margin-bottom:6px}.empty .btn{margin-top:14px}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;padding:20px 14px;border-right:1px solid var(--border);background:var(--surface);
+display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:10px;padding:2px 10px 20px;font-weight:700;font-size:15px}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#a855f7);display:grid;place-items:center;
+color:#fff;font-size:14px;font-weight:800;flex:none}.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text-2);font-weight:500;text-decoration:none!important}
+.nav a:hover{background:var(--surface-2)}.nav a.active{background:var(--accent-soft);color:var(--accent-text)}
+.nav svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-section{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
+.spacer{flex:1}.topbar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:30px 36px 0;max-width:1200px}
+.content{padding:22px 36px 56px;max-width:1200px}
+@media(max-width:860px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
+.nav{flex-direction:row;flex-wrap:wrap}.nav-section,.spacer{display:none}.topbar,.content{padding-left:18px;padding-right:18px}}
+.steps{list-style:none;margin:0;padding:0}.steps li{display:flex;align-items:center;gap:14px;padding:13px 20px;border-top:1px solid var(--border)}
+.check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border-strong);flex:none;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.done .check{background:var(--success);border-color:var(--success)}.done .step-title{color:var(--muted);text-decoration:line-through}
+.progress{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+.progress>span{display:block;height:100%;background:linear-gradient(90deg,#6366f1,#a855f7);border-radius:99px}
+.chart{display:flex;align-items:flex-end;gap:6px;height:150px}.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;
+justify-content:flex-end;gap:6px;height:100%}.chart .bar{width:100%;max-width:26px;background:var(--accent);border-radius:6px 6px 2px 2px;opacity:.85}
+.chart .bar.zero{background:var(--border);opacity:1}.chart .lbl{font-size:10.5px;color:var(--muted)}
+.hbar{height:8px;border-radius:99px;background:var(--accent);opacity:.85;min-width:2px}
+.post{padding:18px 20px;border-top:1px solid var(--border)}.post:first-child{border-top:0}
+.post-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.post-text{white-space:pre-wrap;margin:12px 0;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);
+border-radius:10px;font-size:13.5px;color:var(--text);font-family:inherit;line-height:1.55}
+details summary{cursor:pointer;color:var(--accent-text);font-size:13px;font-weight:500;list-style:none}
+details summary::-webkit-details-marker{display:none}details[open] summary{margin-bottom:10px}.over{color:var(--danger);font-weight:600}
+.public{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:64px 20px 40px;
+background:radial-gradient(1100px 480px at 50% -12%,var(--accent-soft),transparent)}.public-inner{width:100%;max-width:520px}
+.hero{text-align:center;margin-bottom:26px}.hero h1{font-size:42px;line-height:1.08;margin:20px 0 12px;letter-spacing:-.035em}
+.tagline{font-size:17px;color:var(--muted);max-width:440px;margin:0 auto}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border);
+font-size:12.5px;font-weight:500;color:var(--text-2);box-shadow:var(--shadow)}
+.pill .live{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.big-logo{width:54px;height:54px;border-radius:15px;font-size:24px;margin:0 auto}
+.proof{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;color:var(--muted);font-size:13.5px}
+.avatars{display:flex}.avatars span{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);margin-left:-8px;
+background:linear-gradient(135deg,#c7d2fe,#e9d5ff)}.avatars span:first-child{margin-left:0}
+.avatars span:nth-child(2){background:linear-gradient(135deg,#bae6fd,#c7d2fe)}.avatars span:nth-child(3){background:linear-gradient(135deg,#fbcfe8,#fde68a)}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.how b{display:block;font-size:13.5px;margin-top:8px}
+.how .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);font-weight:700;font-size:13px}
+.reward{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border);color:var(--text-2)}
+.reward:first-child{border-top:0}.goal{flex:none;min-width:82px;font-size:12px;font-weight:600;color:var(--accent-text);
+background:var(--accent-soft);border-radius:999px;padding:3px 10px;text-align:center}.reward.done .goal{background:var(--success-soft);color:var(--success)}
+.position{font-size:68px;font-weight:800;letter-spacing:-.05em;line-height:1;background:linear-gradient(135deg,#6366f1,#a855f7);
+-webkit-background-clip:text;background-clip:text;color:transparent}
+.share-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:440px){.share-grid{grid-template-columns:repeat(3,1fr)}}
+.footer{margin-top:28px;text-align:center;font-size:12.5px;color:var(--muted)}.prose p{margin:0 0 12px;color:var(--text-2)}
 """
+
+PLATFORM_LABELS = {"x": "X", "bluesky": "Bluesky", "threads": "Threads", "linkedin": "LinkedIn", "discord": "Discord", "reddit": "Reddit"}
+STATUS_LABELS = {"draft": "Draft", "scheduled": "Scheduled", "due": "Ready to post", "posted": "Posted", "failed": "Failed",
+                 "queued": "Queued", "sent": "Sent"}
+ICONS = {
+    "overview": '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>'
+                '<rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+    "posts": '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    "marketing": '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+    "emails": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    "settings": '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/>'
+                '<circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+    "external": '<path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>',
+    "download": '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+    "logout": '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
+}
+SETTING_FIELDS = [
+    ("Product", [
+        ("product", "Product name", "Shown on your waitlist page, emails and posts.", "text"),
+        ("tagline", "Tagline", "One sentence: what it does for people.", "text"),
+        ("problem", "Problem it solves", "Used in posts, e.g. \"spending weeks on boilerplate\".", "text"),
+        ("audience", "Audience", "Who it's for, e.g. \"indie developers\".", "text"),
+        ("launch_date", "Launch date", "Drives the countdown and the launch-week campaign.", "date"),
+        ("top_reward", "Top reward", "What your best referrers and early members get.", "text"),
+    ]),
+    ("Sharing", [
+        ("share_image_url", "Link preview image URL", "Image shown when your page is shared on X, LinkedIn, Slack... (optional).", "url"),
+        ("post_link_target", "Where post links go", "Leave empty for the waitlist page. After launch, set your app's URL.", "url"),
+    ]),
+    ("Privacy", [
+        ("contact_email", "Contact email", "Shown on the privacy page for data requests.", "email"),
+        ("privacy_url", "Your own privacy policy URL", "Leave empty to use the built-in privacy page.", "url"),
+    ]),
+]
+
+
+def icon(name):
+    return f'<svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[name]}</svg>'
+
+
+
+def shorten(text, limit):
+    """Trim text to about `limit` characters at a word boundary."""
+    text = " ".join((text or "").split())
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0]
+    return cut.rstrip(",.;:-") + "\u2026"
+
+
+def status_badge(state):
+    """On / Off / Default badge for status tables (None = the default is fine)."""
+    if state is None:
+        return '<span class="badge b-neutral">Default</span>'
+    if state:
+        return '<span class="badge dot b-on">On</span>'
+    return '<span class="badge dot b-off">Off</span>'
+
+def plural(count, word):
+    return f"{count} {word}{'' if count == 1 else 's'}"
+
+
+def nice_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").strftime("%B %d, %Y").replace(" 0", " ")
+    except (TypeError, ValueError):
+        return value or ""
+
+
+def badge(status):
+    return f'<span class="badge dot b-{esc(status)}">{esc(STATUS_LABELS.get(status, status))}</span>'
+
+
+def flash_html(message):
+    if not message:
+        return ""
+    lowered = message.lower()
+    kind = "danger" if ("error" in lowered or "required" in lowered or "not found" in lowered) else "success"
+    return f'<div class="alert alert-{kind}">{esc(message)}</div>'
+
+
+def platform_chips(selected):
+    return "".join(
+        f'<label class="chip"><input type="checkbox" name="platforms" value="{p}" {"checked" if p in selected else ""}>'
+        f'{PLATFORM_LABELS[p]}</label>'
+        for p in PLATFORM_LIMITS
+    )
 
 
 def page(title, body, head_extra=""):
-    return f"""<!doctype html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
 <title>{esc(title)}</title>{head_extra}<style>{CSS}</style></head>
-<body><div class="wrap">{body}</div></body></html>"""
+<body>{body}</body></html>"""
+
+
+def public_shell(title, inner, head_extra=""):
+    product = settings()["product"]
+    privacy = esc(settings().get("privacy_url") or "/privacy")
+    body = f"""<div class="public"><div class="public-inner">{inner}
+<div class="footer">{esc(product)} &middot; <a href="{privacy}">Privacy</a> &middot; Powered by LaunchKit</div></div></div>"""
+    return page(title, body, head_extra)
 
 
 def message_page(title, message_html):
-    return page(title, f'<div class="hero"><h1>{esc(title)}</h1><p>{message_html}</p><a class="btn alt" href="/">Back</a></div>')
+    inner = f"""<div class="card"><div class="card-body" style="text-align:center;padding:40px 28px">
+<h1 style="font-size:26px">{esc(title)}</h1><p class="muted" style="margin:10px 0 22px">{message_html}</p>
+<a class="btn btn-secondary" href="/">Back to the waitlist</a></div></div>"""
+    return public_shell(title, inner)
 
 
 def landing_page(params, error=""):
@@ -1266,26 +1454,43 @@ def landing_page(params, error=""):
     ref = esc(params.get("ref", [""])[0])
     source = esc(params.get("utm_source", [""])[0])
     post_code = esc(params.get("utm_content", [""])[0])
-    error_html = f'<p class="over">{esc(error)}</p>' if error else ""
-    rewards = "".join(f'<div class="reward">Invite {n}: {esc(r)}</div>' for n, r in MILESTONES)
-    body = f"""
+    error_html = f'<div class="alert alert-danger" style="margin-bottom:12px">{esc(error)}</div>' if error else ""
+    initial = esc((cfg["product"] or "L")[:1].upper())
+    rewards = "".join(
+        f'<div class="reward"><span class="goal">{plural(n, "invite")}</span><span>{esc(r)}</span></div>'
+        for n, r in MILESTONES
+    )
+    proof = (
+        f'<div class="proof"><span class="avatars"><span></span><span></span><span></span></span>'
+        f'<span><b>{total}</b> {"person has" if total == 1 else "people have"} already joined</span></div>'
+    )
+    inner = f"""
 <div class="hero">
-  <div class="muted">Launching {esc(cfg['launch_date'])}</div>
+  <div class="logo big-logo">{initial}</div>
   <h1>{esc(cfg['product'])}</h1>
-  <p>{esc(cfg['tagline'])}</p>
-  <form class="form" method="post" action="/join">
-    <input name="name" placeholder="Your name (optional)">
-    <input name="email" type="email" placeholder="you@example.com" required>
-    <input type="hidden" name="ref" value="{ref}">
-    <input type="hidden" name="source" value="{source}">
-    <input type="hidden" name="post" value="{post_code}">
-    <button style="width:100%">Join the waitlist</button>
-    <p class="muted" style="font-size:13px">By joining you agree to receive emails about {esc(cfg['product'])}. Unsubscribe anytime. <a href="{esc(cfg.get('privacy_url') or '/privacy')}">Privacy</a></p>
-    {error_html}
-  </form>
-  <p class="muted" style="margin-top:18px"><b>{total}</b> {'person has' if total == 1 else 'people have'} already joined</p>
+  <p class="tagline">{esc(cfg['tagline'])}</p>
+  <div style="margin-top:18px"><span class="pill"><span class="live"></span>Launching {esc(nice_date(cfg['launch_date']))}</span></div>
 </div>
-<div class="card form"><b>Move up the line</b><p class="muted">Every friend who joins with your link moves you up {BUMP_PER_REFERRAL} spots.</p>{rewards}</div>
+<div class="card"><div class="card-body">
+  {error_html}
+  <form method="post" action="/join">
+    <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" placeholder="you@example.com" required autofocus></div>
+    <div class="field"><label for="name">Name <span class="muted" style="font-weight:400">(optional)</span></label><input id="name" name="name" placeholder="Ada Lovelace"></div>
+    <input type="hidden" name="ref" value="{ref}"><input type="hidden" name="source" value="{source}"><input type="hidden" name="post" value="{post_code}">
+    <button class="btn btn-lg btn-block">Join the waitlist</button>
+    <p class="help" style="text-align:center;margin-top:10px">By joining you agree to receive emails about {esc(cfg['product'])}. Unsubscribe anytime. <a href="{esc(cfg.get('privacy_url') or '/privacy')}">Privacy</a></p>
+  </form>
+</div></div>
+{proof}
+<div class="card" style="margin-top:26px"><div class="card-body">
+  <div class="how">
+    <div><span class="n">1</span><b>Join</b><span class="muted small">Get your spot in line</span></div>
+    <div><span class="n">2</span><b>Share</b><span class="muted small">Send friends your link</span></div>
+    <div><span class="n">3</span><b>Move up</b><span class="muted small">+{BUMP_PER_REFERRAL} spots per friend</span></div>
+  </div>
+</div></div>
+<div class="card" style="margin-top:14px"><div class="card-head"><div><h3>Rewards for inviting friends</h3></div></div>
+<div class="card-body" style="padding-top:6px;padding-bottom:6px">{rewards}</div></div>
 """
     # Open Graph / Twitter tags make shared links render as rich previews
     image = cfg.get("share_image_url", "").strip()
@@ -1298,7 +1503,7 @@ def landing_page(params, error=""):
     )
     if image:
         head += f'<meta property="og:image" content="{esc(image)}"><meta name="twitter:image" content="{esc(image)}">'
-    return page(cfg["product"] + " - Join the waitlist", body, head)
+    return public_shell(cfg["product"] + " - Join the waitlist", inner, head)
 
 
 def status_page(subscriber, params):
@@ -1307,6 +1512,7 @@ def status_page(subscriber, params):
     position = position_of(subscriber)
     link = referral_link(subscriber)
     private = esc(subscriber["private_token"])
+    referrals = subscriber["referrals"]
     pending_friends = query(
         "SELECT COUNT(*) AS n FROM subscribers WHERE referred_by = ? AND referral_credited = 0",
         (subscriber["code"],),
@@ -1317,52 +1523,67 @@ def status_page(subscriber, params):
 
     notices = ""
     if "confirmed" in params:
-        notices += '<div class="notice ok">Email confirmed - your spot is locked in.</div>'
+        notices += '<div class="alert alert-success">Email confirmed - your spot is locked in.</div>'
     if "resent" in params:
-        notices += '<div class="notice">Confirmation email sent. Check your inbox (and spam folder).</div>'
+        notices += '<div class="alert alert-info">Confirmation email sent. Check your inbox (and spam folder).</div>'
     if REQUIRE_VERIFICATION and not subscriber["verified"]:
-        notices += f"""<div class="notice warn">Please confirm your email to lock in your spot - we sent you a link.
-<form method="post" action="/s/{private}/resend" style="margin-top:8px"><button class="btn alt">Resend confirmation email</button></form></div>"""
+        notices += f"""<div class="alert alert-warn"><div class="row between"><span>Please confirm your email to lock in your spot - we sent you a link.</span>
+<form method="post" action="/s/{private}/resend"><button class="btn btn-secondary btn-sm">Resend email</button></form></div></div>"""
     if subscriber["unsubscribed"]:
-        notices += '<div class="notice">You have unsubscribed from updates. You keep your spot.</div>'
+        notices += '<div class="alert alert-info">You have unsubscribed from updates. You keep your spot.</div>'
 
+    next_goal = next(((n, r) for n, r in MILESTONES if referrals < n), None)
+    previous_goal = max([n for n, _ in MILESTONES if referrals >= n] or [0])
+    if next_goal:
+        remaining = next_goal[0] - referrals
+        span = max(next_goal[0] - previous_goal, 1)
+        progress = 100 * (referrals - previous_goal) / span
+        next_html = (f'<div class="row between small"><span>Next reward: <b>{esc(next_goal[1])}</b></span>'
+                     f'<span class="muted">{plural(remaining, "more invite")}</span></div>'
+                     f'<div class="progress" style="margin-top:8px"><span style="width:{progress:.0f}%"></span></div>')
+    else:
+        next_html = '<div class="alert alert-success">You\'ve unlocked every reward. Legend.</div>'
     rewards = "".join(
-        f'<div class="reward {"done" if subscriber["referrals"] >= n else ""}">'
-        f'{"✓" if subscriber["referrals"] >= n else "○"} {n} invite{"s" if n > 1 else ""}: {esc(r)}</div>'
+        f'<div class="reward {"done" if referrals >= n else ""}"><span class="goal">{"✓ " if referrals >= n else ""}{plural(n, "invite")}</span>'
+        f'<span>{esc(r)}</span></div>'
         for n, r in MILESTONES
     )
-    next_goal = next((n for n, _ in MILESTONES if subscriber["referrals"] < n), None)
-    next_text = (
-        f"Invite {next_goal - subscriber['referrals']} more to unlock the next reward."
-        if next_goal else "You've unlocked every reward. Legend."
-    )
     pending_text = (
-        f"<br>{pending_friends} friend{'s' if pending_friends != 1 else ''} still need to confirm their email."
+        f'<p class="muted small" style="margin-top:6px">{plural(pending_friends, "friend")} still need to confirm their email.</p>'
         if pending_friends else ""
     )
     greeting = f", {esc(subscriber['name'])}" if subscriber["name"] else ""
-    body = f"""
-{notices}
-<div class="hero">
-  <div class="muted">You're on the {esc(cfg['product'])} waitlist{greeting}!</div>
-  <div class="big">#{position}</div>
-  <div class="muted">out of {max(total, position)} &middot; {subscriber['referrals']} friend{'s' if subscriber['referrals'] != 1 else ''} referred{pending_text}</div>
-</div>
-<div class="card form">
-  <b>Your referral link</b>
-  <input id="reflink" value="{esc(link)}" readonly onclick="this.select()">
-  <button onclick="navigator.clipboard.writeText(document.getElementById('reflink').value);this.innerText='Copied!'">Copy link</button>
-  <p class="muted">Each friend who joins and confirms moves you up {BUMP_PER_REFERRAL} spots. {next_text}</p>
-  <a class="btn alt" target="_blank" href="https://twitter.com/intent/tweet?text={encoded}">Share on X</a>
-  <a class="btn alt" target="_blank" href="https://www.linkedin.com/feed/?shareActive=true&text={encoded}">LinkedIn</a>
-  <a class="btn alt" target="_blank" href="https://bsky.app/intent/compose?text={encoded}">Bluesky</a>
-  <a class="btn alt" target="_blank" href="https://wa.me/?text={encoded}">WhatsApp</a>
-  <a class="btn alt" href="mailto:?subject={urllib.parse.quote(cfg['product'])}&body={encoded}">Email</a>
-</div>
-<div class="card form"><b>Rewards</b>{rewards}</div>
-<p class="muted" style="text-align:center">Bookmark this private page to check your position (don't share it - share your referral link instead).</p>
+    share_buttons = "".join(
+        f'<a class="btn btn-secondary btn-sm" target="_blank" href="{href}">{label}</a>'
+        for label, href in (
+            ("X", f"https://twitter.com/intent/tweet?text={encoded}"),
+            ("LinkedIn", f"https://www.linkedin.com/feed/?shareActive=true&text={encoded}"),
+            ("Bluesky", f"https://bsky.app/intent/compose?text={encoded}"),
+            ("WhatsApp", f"https://wa.me/?text={encoded}"),
+            ("Email", f"mailto:?subject={urllib.parse.quote(cfg['product'])}&body={encoded}"),
+        )
+    )
+    inner = f"""
+<div class="stack">{notices}</div>
+<div class="card" style="margin-top:{'16px' if notices else '0'}"><div class="card-body" style="text-align:center;padding:34px 24px">
+  <p class="muted">You're on the {esc(cfg['product'])} waitlist{greeting}!</p>
+  <div class="position" style="margin:14px 0 8px">#{position}</div>
+  <p class="muted">of {max(total, position)} &middot; <span>{referrals} friend{'s' if referrals != 1 else ''} referred</span></p>
+  {pending_text}
+</div></div>
+<div class="card" style="margin-top:14px"><div class="card-head"><div><h3>Move up the line</h3>
+<p>Each friend who joins and confirms moves you up {BUMP_PER_REFERRAL} spots.</p></div></div>
+<div class="card-body stack">
+  <div class="row"><input id="reflink" class="grow" value="{esc(link)}" readonly onclick="this.select()">
+  <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('reflink').value);this.innerText='Copied!'">Copy link</button></div>
+  <div class="share-grid">{share_buttons}</div>
+  {next_html}
+</div></div>
+<div class="card" style="margin-top:14px"><div class="card-head"><h3>Rewards</h3></div>
+<div class="card-body" style="padding-top:6px;padding-bottom:6px">{rewards}</div></div>
+<p class="muted small" style="text-align:center;margin-top:16px">Bookmark this private page to check your spot. Share your invite link, not this page.</p>
 """
-    return page("Your spot - " + cfg["product"], body)
+    return public_shell("Your spot - " + cfg["product"], inner)
 
 
 def privacy_page():
@@ -1370,7 +1591,8 @@ def privacy_page():
     product = esc(cfg['product'])
     contact = esc(cfg.get('contact_email') or from_address())
     sender = {'resend': 'Resend', 'smtp': 'our email provider', 'console': 'our email provider'}[email_provider()]
-    body = f"""<div class="card" style="max-width:720px;margin:40px auto"><h1>{product} privacy notice</h1>
+    inner = f"""<div class="card"><div class="card-body prose" style="padding:32px">
+<h1 style="font-size:24px;margin-bottom:18px">{product} privacy notice</h1>
 <p><b>What we collect when you join the waitlist:</b> your email address, your name if you give it, which referral link
 or social post brought you, and a one-way hash of your IP address (used only to prevent abuse).</p>
 <p><b>When you click a link we posted on social media:</b> we record the time and a one-way hash of your IP address, and
@@ -1379,51 +1601,167 @@ set a cookie (<code>lk_post</code>, 30 days) so we know which post brought you i
 and measure which posts work.</p>
 <p><b>Who processes it:</b> emails are delivered through {sender}. We don't sell your data.</p>
 <p><b>Your choices:</b> every update email has an unsubscribe link. To see or delete your data, contact {contact}.</p>
-</div>"""
-    return page(f"{cfg['product']} - Privacy", body)
+</div></div>"""
+    return public_shell(f"{cfg['product']} - Privacy", inner)
 
 
 def unsubscribe_page(subscriber, done=False):
     if done or subscriber["unsubscribed"]:
         return message_page("Unsubscribed", "You won't receive further updates. You keep your spot on the waitlist.")
-    body = f"""<div class="hero"><h1>Unsubscribe?</h1><p>Stop receiving waitlist updates at {esc(subscriber['email'])}.</p>
-<form method="post" action="/unsubscribe/{esc(subscriber['private_token'])}"><button class="btn red">Unsubscribe</button></form></div>"""
-    return page("Unsubscribe", body)
+    inner = f"""<div class="card"><div class="card-body" style="text-align:center;padding:40px 28px">
+<h1 style="font-size:26px">Unsubscribe?</h1><p class="muted" style="margin:10px 0 22px">Stop receiving waitlist updates at {esc(subscriber['email'])}. You keep your spot.</p>
+<form method="post" action="/unsubscribe/{esc(subscriber['private_token'])}"><button class="btn">Unsubscribe</button></form></div></div>"""
+    return public_shell("Unsubscribe", inner)
 
 
 def admin_login_page(error=""):
-    body = f"""<div class="card form" style="margin-top:80px"><h2>LaunchKit admin</h2>
-<form method="post" action="/admin/login"><input type="password" name="token" placeholder="Admin token">
-<button>Log in</button></form><p class="over">{esc(error)}</p></div>"""
-    return page("Admin login", body)
+    error_html = f'<div class="alert alert-danger" style="margin-bottom:14px">{esc(error)}</div>' if error else ""
+    body = f"""<div class="public"><div class="public-inner" style="max-width:400px;margin-top:40px">
+<div class="hero"><div class="logo big-logo">L</div><h1 style="font-size:28px;margin:18px 0 6px">LaunchKit</h1>
+<p class="muted">Sign in to your dashboard</p></div>
+<div class="card"><div class="card-body">{error_html}
+<form method="post" action="/admin/login"><div class="field"><label for="token">Admin password</label>
+<input id="token" type="password" name="token" placeholder="Admin token" autofocus required></div>
+<button class="btn btn-block btn-lg">Sign in</button></form>
+<p class="help" style="margin-top:12px">Your password is <code>ADMIN_TOKEN</code> in the <code>.env</code> file.</p></div></div></div></div>"""
+    return page("Sign in - LaunchKit", body)
 
 
-def admin_page(message="", prefill_subject="", prefill_body=""):
+def admin_shell(active, title, subtitle, content, message="", actions=""):
+    nav_items = [
+        ("overview", "/admin", "Overview"),
+        ("posts", "/admin/posts", "Posts"),
+        ("marketing", "/admin/marketing", "Marketing"),
+        ("emails", "/admin/emails", "Emails"),
+        ("settings", "/admin/settings", "Settings"),
+    ]
+    nav = "".join(
+        f'<a href="{href}" class="{"active" if key == active else ""}">{icon(key)}{label}</a>'
+        for key, href, label in nav_items
+    )
+    body = f"""<div class="app">
+<aside class="sidebar"><div class="brand"><span class="logo">L</span>LaunchKit</div>
+<nav class="nav">{nav}</nav><div class="spacer"></div>
+<div class="nav-section">Shortcuts</div>
+<nav class="nav"><a href="/" target="_blank">{icon('external')}Public page</a>
+<a href="/admin/export.csv">{icon('download')}Export CSV</a><a href="/admin/backup.db">{icon('download')}Download backup</a>
+<a href="/admin/logout">{icon('logout')}Log out</a></nav></aside>
+<main><header class="topbar"><div><h1>{esc(title)}</h1><p class="muted" style="margin-top:4px">{subtitle}</p></div>
+<div class="row">{actions}</div></header>
+<div class="content stack">{flash_html(message)}{content}</div></main></div>"""
+    return page(f"{title} - LaunchKit admin", body)
+
+
+def ai_progress_html():
+    with ai_jobs_lock:
+        pending_ai, failed_ai = ai_jobs["pending"], ai_jobs["failed"]
+    html = ""
+    if pending_ai:
+        html += f'<div class="alert alert-info">AI is writing {plural(pending_ai, "more post")} in the background - refresh in a moment.</div>'
+    if failed_ai:
+        html += f'<div class="alert alert-warn">{plural(failed_ai, "AI post")} fell back to templates - see the note on each post.</div>'
+    return html
+
+
+def overview_page(message=""):
     cfg = settings()
     total = waitlist_count()
     pending_confirmation = query("SELECT COUNT(*) AS n FROM subscribers WHERE verified = 0", one=True)["n"]
     credited = query("SELECT COUNT(*) AS n FROM subscribers WHERE referral_credited = 1", one=True)["n"]
-    today = query(
-        "SELECT COUNT(*) AS n FROM subscribers WHERE created_at >= ?", (local_now().strftime("%Y-%m-%d"),), one=True
-    )["n"]
+    today_date = local_now().date()
+    today = query("SELECT COUNT(*) AS n FROM subscribers WHERE created_at >= ?", (today_date.isoformat(),), one=True)["n"]
     sharers = query("SELECT COUNT(*) AS n FROM subscribers WHERE referrals > 0", one=True)["n"]
-    unsubscribed = query("SELECT COUNT(*) AS n FROM subscribers WHERE unsubscribed = 1", one=True)["n"]
     k_factor = credited / max(total - credited, 1)
+    post_count = query("SELECT COUNT(*) AS n FROM posts", one=True)["n"]
 
-    daily = query(
-        "SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS n FROM subscribers GROUP BY day ORDER BY day DESC LIMIT 14"
+    steps = [
+        (cfg["product"] != DEFAULT_SETTINGS["product"], "Describe your product", "Name, tagline and launch date.", "/admin/settings", "Open settings"),
+        (email_provider() != "console", "Connect email delivery", "Add a Resend key or SMTP details to .env so confirmation emails reach people.", "/admin/emails", "Email setup"),
+        (post_count > 0, "Plan your first posts", "Generate a 2-week build-in-public plan in one click.", "/admin/posts", "Create posts"),
+        (total > 0, "Get your first signup", "Share your public waitlist page.", "/", "Open public page"),
+        (AI_ENABLED, "Turn on the AI writer (optional)", "Add AI_API_KEY to .env to have posts written for you.", "/admin/settings", "How"),
+    ]
+    done_count = sum(1 for done, *_ in steps if done)
+    checklist = ""
+    if done_count < len(steps):
+        items = "".join(
+            f"""<li class="{'done' if done else ''}"><span class="check">{'✓' if done else ''}</span>
+<div class="grow"><div class="step-title" style="font-weight:600">{esc(title)}</div><div class="muted small">{esc(detail)}</div></div>
+{'' if done else f'<a class="btn btn-secondary btn-sm" href="{href}" {"target=_blank" if href == "/" else ""}>{esc(label)}</a>'}</li>"""
+            for done, title, detail, href, label in steps
+        )
+        checklist = f"""<div class="card"><div class="card-head"><div><h3>Get set up</h3><p>{done_count} of {len(steps)} done</p></div>
+<div style="width:180px" class="progress"><span style="width:{100 * done_count / len(steps):.0f}%"></span></div></div>
+<ul class="steps" style="margin-top:-1px">{items}</ul></div>"""
+
+    stats = [
+        ("Waitlist" + (" (confirmed)" if REQUIRE_VERIFICATION else ""), total, "People in line"),
+        ("Awaiting confirmation", pending_confirmation, "Haven't clicked the email link yet"),
+        ("Signups today", today, today_date.strftime("%B %d").replace(" 0", " ")),
+        ("Via referrals", credited, "Joined through a friend's link"),
+        ("Viral K-factor", f"{k_factor:.2f}", "Above 1 means the list grows by itself"),
+        ("Active sharers", sharers, "Referred at least one friend"),
+    ]
+    stats_html = "".join(
+        f'<div class="card stat"><div class="stat-label">{esc(label)}</div><div class="stat-value">{value}</div>'
+        f'<div class="stat-hint">{esc(hint)}</div></div>'
+        for label, value, hint in stats
     )
-    max_daily = max([row["n"] for row in daily] or [1])
-    daily_html = "".join(
-        f'<tr><td>{row["day"]}</td><td style="width:70%"><div class="bar" style="width:{100 * row["n"] / max_daily:.0f}%"></div></td><td>{row["n"]}</td></tr>'
-        for row in reversed(daily)
-    ) or '<tr><td class="muted">No signups yet</td></tr>'
-    sources = query("SELECT COALESCE(source,'direct') AS s, COUNT(*) AS n FROM subscribers GROUP BY s ORDER BY n DESC")
-    sources_html = "".join(f"<tr><td>{esc(r['s'])}</td><td>{r['n']}</td></tr>" for r in sources) or '<tr><td class="muted">-</td></tr>'
-    top = query("SELECT email, referrals FROM subscribers WHERE referrals > 0 ORDER BY referrals DESC LIMIT 10")
-    top_html = "".join(f"<tr><td>{esc(r['email'])}</td><td>{r['referrals']}</td></tr>" for r in top) or '<tr><td class="muted">No referrals yet</td></tr>'
 
-    # ---- posts ----
+    counts = {row["day"]: row["n"] for row in query(
+        "SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS n FROM subscribers WHERE created_at >= ? GROUP BY day",
+        ((today_date - timedelta(days=13)).isoformat(),),
+    )}
+    days = [today_date - timedelta(days=offset) for offset in range(13, -1, -1)]
+    peak = max([counts.get(day.isoformat(), 0) for day in days] + [1])
+    chart = "".join(
+        f'<div class="col" title="{day:%b %d}: {plural(counts.get(day.isoformat(), 0), "signup")}">'
+        f'<div class="bar {"zero" if not counts.get(day.isoformat()) else ""}" style="height:{max(3, 100 * counts.get(day.isoformat(), 0) / peak):.0f}%"></div>'
+        f'<span class="lbl">{day.day}</span></div>'
+        for day in days
+    )
+    signups_14 = sum(counts.values())
+
+    sources = query("SELECT COALESCE(source,'direct') AS s, COUNT(*) AS n FROM subscribers GROUP BY s ORDER BY n DESC LIMIT 8")
+    sources_html = "".join(f"<tr><td>{esc(r['s'])}</td><td>{r['n']}</td></tr>" for r in sources)
+    top = query("SELECT email, referrals FROM subscribers WHERE referrals > 0 ORDER BY referrals DESC LIMIT 8")
+    top_html = "".join(f"<tr><td>{esc(r['email'])}</td><td>{r['referrals']}</td></tr>" for r in top)
+
+    provider_label = {"resend": "Resend", "smtp": "SMTP", "console": "Console only (not delivered)"}[email_provider()]
+    status_rows = [
+        ("Email delivery", email_provider() != "console", provider_label),
+        ("AI writer", AI_ENABLED, f"AI writer: {'on (' + esc(AI_MODEL) + ')' if AI_ENABLED else 'off'}"),
+        ("Bluesky auto-post", bool(BSKY_HANDLE and BSKY_APP_PASSWORD), "Posts publish automatically" if BSKY_HANDLE else "Add BSKY_HANDLE to .env"),
+        ("Discord auto-post", bool(DISCORD_WEBHOOK), "Posts publish automatically" if DISCORD_WEBHOOK else "Add DISCORD_WEBHOOK to .env"),
+    ]
+    status_html = "".join(
+        f'<tr><td><b style="color:var(--text)">{name}</b><div class="muted small">{detail}</div></td>'
+        f'<td style="text-align:right">{status_badge(on)}</td></tr>'
+        for name, on, detail in status_rows
+    )
+
+    def table_or_empty(rows_html, heads, empty_text):
+        if not rows_html:
+            return f'<div class="empty small">{empty_text}</div>'
+        return f'<table class="num-table"><tr><th>{heads[0]}</th><th>{heads[1]}</th></tr>{rows_html}</table>'
+
+    content = f"""{checklist}
+<div class="grid g3">{stats_html}</div>
+<div class="grid g2">
+<div class="card"><div class="card-head"><div><h3>Signups</h3><p>Last 14 days &middot; {plural(signups_14, "signup")}</p></div></div>
+<div class="card-body"><div class="chart">{chart}</div></div></div>
+<div class="card"><div class="card-head"><div><h3>Setup status</h3><p>Change these in the .env file, then restart the app</p></div></div>
+<table>{status_html}</table></div>
+</div>
+<div class="grid g2">
+<div class="card"><div class="card-head"><h3>Where signups come from</h3></div>{table_or_empty(sources_html, ("Source", "Signups"), "No signups yet - share your public page to get started.")}</div>
+<div class="card"><div class="card-head"><h3>Top referrers</h3></div>{table_or_empty(top_html, ("Subscriber", "Friends"), "Nobody has referred a friend yet.")}</div>
+</div>"""
+    actions = '<a class="btn btn-secondary" href="/" target="_blank">View public page</a><a class="btn" href="/admin/posts">Create posts</a>'
+    return admin_shell("overview", "Overview", f"{esc(cfg['product'])} pre-launch dashboard", content, message, actions)
+
+
+def posts_page(message=""):
     clicks_by_post, signups_by_post = post_stats()
     campaign_names = {row["id"]: row["name"] for row in query("SELECT id, name FROM campaigns")}
     posts = query(
@@ -1431,149 +1769,158 @@ def admin_page(message="", prefill_subject="", prefill_body=""):
            CASE status WHEN 'due' THEN 0 WHEN 'failed' THEN 1 WHEN 'draft' THEN 2 WHEN 'scheduled' THEN 3 ELSE 4 END,
            scheduled_at, id LIMIT 200"""
     )
-    post_rows = []
+    post_items = []
     for post in posts:
         rendered = render_live(post["body"], post["platform"], post["link_code"])
         limit = PLATFORM_LIMITS.get(post["platform"], 99999)
-        length_html = f'<span class="{"over" if len(rendered) > limit else "muted"}">{len(rendered)}/{limit}</span>'
-        performance = (
-            f'<br><span class="muted">{clicks_by_post.get(post["link_code"], 0)} clicks &middot; '
-            f'{signups_by_post.get(post["link_code"], 0)} signups</span>'
-        )
-        campaign_html = (
-            f'<br><span class="muted">{esc(campaign_names[post["campaign_id"]])}</span>'
-            if post["campaign_id"] in campaign_names else ""
-        )
+        length_html = (f'<span class="{"over" if len(rendered) > limit else ""}">{len(rendered)}/{limit} characters</span>'
+                       if limit < 10000 else "")
+        meta = [f'<b style="color:var(--text)">{PLATFORM_LABELS.get(post["platform"], post["platform"])}</b>', badge(post["status"])]
+        if post["scheduled_at"]:
+            meta.append(esc(post["scheduled_at"].replace("T", " ")))
+        if post["campaign_id"] in campaign_names:
+            meta.append(esc(campaign_names[post["campaign_id"]]))
+        meta.append(f'{plural(clicks_by_post.get(post["link_code"], 0), "click")} &middot; '
+                    f'{plural(signups_by_post.get(post["link_code"], 0), "signup")}')
         actions = ""
         if post["status"] != "posted":
             if post["platform"] in AUTO_POST_PLATFORMS:
-                actions += f'<form method="post" action="/admin/post/{post["id"]}/publish" style="display:inline"><button class="btn green">Post now</button></form>'
+                actions += f'<form method="post" action="/admin/post/{post["id"]}/publish"><button class="btn btn-sm">Post now</button></form>'
             else:
-                actions += f'<a class="btn green" target="_blank" href="{esc(share_url(post["platform"], rendered, post_link(post["link_code"])))}">Share</a>'
-                actions += f'<form method="post" action="/admin/post/{post["id"]}/done" style="display:inline"><button class="btn alt">Mark posted</button></form>'
+                actions += f'<a class="btn btn-sm" target="_blank" href="{esc(share_url(post["platform"], rendered, post_link(post["link_code"])))}">Share</a>'
+                actions += f'<form method="post" action="/admin/post/{post["id"]}/done"><button class="btn btn-secondary btn-sm">Mark posted</button></form>'
             if AI_ENABLED:
-                actions += f'<form method="post" action="/admin/post/{post["id"]}/ai" style="display:inline"><button class="btn purple">AI rewrite</button></form>'
-        actions += f'<form method="post" action="/admin/post/{post["id"]}/delete" style="display:inline"><button class="btn red">Delete</button></form>'
-        edit_form = f"""<details><summary>Edit</summary><form method="post" action="/admin/post/{post['id']}/edit">
-<textarea name="body">{esc(post['body'])}</textarea><input type="datetime-local" name="scheduled_at" value="{esc(post['scheduled_at'] or '')}">
-<button class="btn alt">Save</button></form></details>"""
-        post_rows.append(
-            f"""<tr><td><b>{esc(post['platform'])}</b><br><span class="pill {esc(post['status'])}">{esc(post['status'])}</span>
-<br><span class="muted">{esc(post['scheduled_at'] or 'unscheduled')}</span>{campaign_html}{performance}</td>
-<td><pre>{esc(rendered)}</pre>{length_html} <span class="muted">{esc(post['result'] or '')}</span>{edit_form}</td>
-<td style="white-space:nowrap">{actions}</td></tr>"""
+                actions += f'<form method="post" action="/admin/post/{post["id"]}/ai"><button class="btn btn-secondary btn-sm">AI rewrite</button></form>'
+        actions += (f'<form method="post" action="/admin/post/{post["id"]}/delete" onsubmit="return confirm(\'Delete this post?\')">'
+                    f'<button class="btn btn-danger btn-sm">Delete</button></form>')
+        edit_form = f"""<details style="margin-top:10px"><summary>Edit post</summary><form method="post" action="/admin/post/{post['id']}/edit">
+<div class="field"><textarea name="body">{esc(post['body'])}</textarea><span class="help">Placeholders {{link}}, {{count}} and {{days_left}} fill in when you post.</span></div>
+<div class="row"><input type="datetime-local" name="scheduled_at" value="{esc(post['scheduled_at'] or '')}" style="max-width:240px">
+<button class="btn btn-secondary btn-sm">Save changes</button></div></form></details>"""
+        note = f'<span class="muted small">{esc(post["result"])}</span>' if post["result"] else ""
+        post_items.append(
+            f"""<div class="post"><div class="row between"><div class="post-meta">{' &middot; '.join(meta)}</div><div class="row" style="gap:6px">{actions}</div></div>
+<div class="post-text">{esc(rendered)}</div><div class="row between small muted">{length_html}{note}</div>{edit_form}</div>"""
         )
-    posts_html = "".join(post_rows) or '<tr><td class="muted">No posts yet - generate a content plan above.</td></tr>'
+    if post_items:
+        posts_html = "".join(post_items)
+    else:
+        posts_html = """<div class="empty"><h3>No posts yet</h3><p>Generate a 2-week plan above, or write your first post.</p></div>"""
 
-    platform_checks = "".join(
-        f'<label style="margin-right:12px"><input type="checkbox" name="platforms" value="{p}" {"checked" if p in ("x", "bluesky", "linkedin") else ""}> {p}</label>'
-        for p in PLATFORM_LIMITS
-    )
-    template_options = "".join(f'<option value="{t}">{t}</option>' for t in TEMPLATES)
-    platform_options = "".join(f'<option value="{p}">{p}</option>' for p in PLATFORM_LIMITS)
-    ai_status = f"AI writer: <b>on</b> ({esc(AI_MODEL)})" if AI_ENABLED else "AI writer: off (set AI_API_KEY)"
-    with ai_jobs_lock:
-        pending_ai, failed_ai = ai_jobs["pending"], ai_jobs["failed"]
-    ai_progress = (
-        f'<div class="notice wide">AI is writing {pending_ai} more post(s) in the background - refresh to see them.</div>'
-        if pending_ai else ""
-    )
-    if failed_ai:
-        ai_progress += f'<div class="notice warn wide">{failed_ai} AI post(s) fell back to templates - see the note under each post.</div>'
-    ai_checkbox = (
-        '<label><input type="checkbox" name="use_ai" checked> Write with AI</label>' if AI_ENABLED else ""
-    )
-    integrations = (
-        f"{ai_status} &middot; Bluesky auto-post: {'<b>on</b>' if BSKY_HANDLE and BSKY_APP_PASSWORD else 'off'} &middot; "
-        f"Discord auto-post: {'<b>on</b>' if DISCORD_WEBHOOK else 'off'} &middot; X / LinkedIn / Threads / Reddit: one-click share"
-    )
-
-    # ---- emails ----
-    provider = email_provider()
-    provider_html = {
-        "resend": f"Resend, from <code>{esc(from_address())}</code>",
-        "smtp": f"SMTP {esc(SMTP_HOST)}:{SMTP_PORT}, from <code>{esc(from_address())}</code>",
-        "console": "<b>Console only</b> - emails are printed in the terminal and listed below, not delivered. Set RESEND_API_KEY or SMTP_HOST.",
-    }[provider]
-    email_counts = {row["status"]: row["n"] for row in query("SELECT status, COUNT(*) AS n FROM emails GROUP BY status")}
-    email_rows = []
-    for row in query("SELECT * FROM emails ORDER BY id DESC LIMIT 25"):
-        preview = f"<details><summary>view</summary><pre>{esc(row['text'])}</pre></details>" if provider == "console" else ""
-        email_rows.append(
-            f"<tr><td>{esc(row['created_at'])}</td><td>{esc(row['to_email'])}</td><td>{esc(row['kind'])}</td>"
-            f"<td>{esc(row['subject'])}{preview}<div class='over'>{esc(row['error'] or '')}</div></td>"
-            f"<td><span class='pill {esc(row['status'])}'>{esc(row['status'])}</span></td></tr>"
-        )
-    emails_html = "".join(email_rows) or '<tr><td class="muted">No emails yet</td></tr>'
-    broadcast_audience = query(
-        "SELECT COUNT(*) AS n FROM subscribers WHERE verified = 1 AND unsubscribed = 0", one=True
-    )["n"]
-
-    settings_inputs = "".join(f'<label class="muted">{k}</label><input name="{k}" value="{esc(v)}">' for k, v in cfg.items())
+    template_options = "".join(f'<option value="{t}">{t.replace("_", " ").capitalize()}</option>' for t in TEMPLATES)
+    platform_options = "".join(f'<option value="{p}">{PLATFORM_LABELS[p]}</option>' for p in PLATFORM_LIMITS)
+    ai_toggle = ('<label class="toggle"><input type="checkbox" name="use_ai" checked> Write with AI</label>' if AI_ENABLED
+                 else '<span class="help">Tip: add AI_API_KEY to .env and the AI writer will draft posts for you.</span>')
     tomorrow = (local_now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    flash = f'<div class="notice ok wide">{esc(message)}</div>' if message else ""
-
-    body = f"""
-<nav><b>LaunchKit</b> &nbsp; <a href="/" target="_blank">Landing page</a><a href="/admin/marketing">Marketing</a><a href="/admin/export.csv">Export CSV</a><a href="/admin/backup.db">Download backup</a>
-<a href="#social">Social</a><a href="#emails">Emails</a><a href="#settings">Settings</a><a href="/admin/logout">Log out</a></nav>
-{flash}
-<h2>{esc(cfg['product'])} pre-launch dashboard</h2>
-<div class="grid">
- <div class="card stat"><div class="muted">Waitlist{' (confirmed)' if REQUIRE_VERIFICATION else ''}</div><div class="num">{total}</div></div>
- <div class="card stat"><div class="muted">Awaiting confirmation</div><div class="num">{pending_confirmation}</div></div>
- <div class="card stat"><div class="muted">Signups today</div><div class="num">{today}</div></div>
- <div class="card stat"><div class="muted">Via referrals</div><div class="num">{credited}</div></div>
- <div class="card stat"><div class="muted">Viral K-factor</div><div class="num">{k_factor:.2f}</div><div class="muted">&gt;1 = self-sustaining</div></div>
- <div class="card stat"><div class="muted">Active sharers</div><div class="num">{sharers}</div></div>
+    content = f"""{ai_progress_html()}
+<div class="grid g2">
+<div class="card"><div class="card-head"><div><h3>Generate a 2-week plan</h3><p>{len(CONTENT_PLAN)} days of build-in-public posts, scheduled for you</p></div></div>
+<div class="card-body"><form method="post" action="/admin/plan">
+<div class="field"><span class="label">Platforms</span><div class="chips">{platform_chips(("x", "bluesky", "linkedin"))}</div></div>
+<div class="row"><div class="field grow"><label>Start date</label><input type="date" name="start" value="{tomorrow}"></div>
+<div class="field grow"><label>Post time</label><input type="time" name="time" value="09:00"></div></div>
+<div class="row between">{ai_toggle}<button class="btn">Generate plan</button></div></form></div></div>
+<div class="card"><div class="card-head"><div><h3>Write a post</h3><p>Start from a template or write your own</p></div></div>
+<div class="card-body"><form method="post" action="/admin/compose">
+<div class="row"><div class="field grow"><label>Platform</label><select name="platform">{platform_options}</select></div>
+<div class="field grow"><label>Template</label><select name="template"><option value="free">Free-form</option>{template_options}</select></div></div>
+<div class="field"><label>Text {('or notes for the AI' if AI_ENABLED else '')}</label>
+<textarea name="body" placeholder="e.g. Shipped dark mode today. {{count}} people on the waitlist: {{link}}"></textarea>
+<span class="help">Leave empty to use the template. {{link}}, {{count}} and {{days_left}} fill in automatically.</span></div>
+<div class="row"><div class="field grow"><label>Campaign</label><select name="campaign_id">{campaign_options()}</select></div>
+<div class="field grow"><label>Schedule (optional)</label><input type="datetime-local" name="scheduled_at"></div></div>
+<div class="row between">{ai_toggle if AI_ENABLED else '<span></span>'}<button class="btn">Save post</button></div></form></div></div>
 </div>
-<div class="grid">
- <div class="card"><b>Signups / day</b><table>{daily_html}</table></div>
- <div class="card"><b>By source</b><table>{sources_html}</table></div>
- <div class="card"><b>Top referrers</b><table>{top_html}</table></div>
-</div>
+<div class="card"><div class="card-head"><div><h3>Your posts</h3><p>"Ready to post" items are due now - click Share to publish</p></div>
+<span class="muted small">{plural(len(posts), "post")}</span></div>{posts_html}</div>"""
+    return admin_shell("posts", "Posts", "Plan, write and publish your build-in-public content", content, message)
 
-<h2 id="social">Social media manager</h2>
-<p class="muted">{integrations}</p>{ai_progress}
-<div class="grid2">
-<div class="card"><b>Generate 2-week build-in-public plan</b>
-<form method="post" action="/admin/plan">{platform_checks}
-<label class="muted">Start date</label><input type="date" name="start" value="{tomorrow}">
-<label class="muted">Post time</label><input type="time" name="time" value="09:00">
-{ai_checkbox}<br><button>Generate {len(CONTENT_PLAN)}-day plan</button></form></div>
-<div class="card"><b>Compose a post</b>
-<form method="post" action="/admin/compose">
-<select name="platform">{platform_options}</select>
-<select name="template"><option value="free">free-form</option>{template_options}</select>
-<select name="campaign_id">{campaign_options()}</select>
-<textarea name="body" placeholder="Your post - or, with AI on, notes like 'shipped dark mode + Stripe billing today'. Live placeholders: {{link}} {{count}} {{days_left}}"></textarea>
-<input type="datetime-local" name="scheduled_at">
-{ai_checkbox}<br><button>Save post</button></form></div>
-</div>
-<div class="card"><table><tr><th>Platform</th><th>Post (as it will be published)</th><th></th></tr>{posts_html}</table></div>
 
-<h2 id="emails">Emails</h2>
-<p class="muted">Delivery: {provider_html}<br>Confirmation before referrals count: <b>{'on' if REQUIRE_VERIFICATION else 'off'}</b>
-&middot; queued {email_counts.get('queued', 0)} &middot; sent {email_counts.get('sent', 0)} &middot; failed {email_counts.get('failed', 0)} &middot; unsubscribed {unsubscribed}</p>
-<div class="grid2">
-<div class="card"><b>Broadcast to the waitlist</b> <span class="muted">({broadcast_audience} confirmed, subscribed)</span>
-<form method="post" action="/admin/broadcast">
-<input name="subject" value="{esc(prefill_subject)}" placeholder="Subject, e.g. {{product}} is live - you're #{{position}}" required>
-<textarea name="body" required placeholder="Hi {{name}},&#10;&#10;We're launching! ...&#10;&#10;Your spot: {{status_link}}&#10;Your invite link: {{referral_link}}">{esc(prefill_body)}</textarea>
-<input name="test_address" type="email" placeholder="Send a test to this address only (optional)">
-<button onclick="return this.form.test_address.value || confirm('Send to {broadcast_audience} people?')">Send</button></form>
-<p class="muted">Placeholders: {{name}} {{position}} {{referral_link}} {{status_link}} {{product}}. An unsubscribe link is added automatically.</p></div>
-<div class="card"><b>Delivery check</b>
-<form method="post" action="/admin/test-email"><input name="to" type="email" placeholder="you@example.com" required>
-<button class="btn alt">Send test email</button></form>
-<form method="post" action="/admin/emails/retry"><button class="btn alt">Retry failed emails</button></form></div>
-</div>
-<div class="card"><table><tr><th>Queued</th><th>To</th><th>Type</th><th>Subject</th><th>Status</th></tr>{emails_html}</table></div>
+def emails_page(message="", prefill_subject="", prefill_body=""):
+    provider = email_provider()
+    if provider == "console":
+        delivery = ('<div class="alert alert-warn"><b>Emails are not being delivered yet.</b> They are printed in the LaunchKit console '
+                    'window and listed below. Add <code>RESEND_API_KEY</code> or <code>SMTP_HOST</code> to <code>.env</code> and restart to send real emails.</div>')
+    else:
+        via = "Resend" if provider == "resend" else f"SMTP ({esc(SMTP_HOST)})"
+        delivery = f'<div class="alert alert-success">Emails are delivered via {via} from <code>{esc(from_address())}</code>.</div>'
+    email_counts = {row["status"]: row["n"] for row in query("SELECT status, COUNT(*) AS n FROM emails GROUP BY status")}
+    unsubscribed = query("SELECT COUNT(*) AS n FROM subscribers WHERE unsubscribed = 1", one=True)["n"]
+    audience = query("SELECT COUNT(*) AS n FROM subscribers WHERE verified = 1 AND unsubscribed = 0", one=True)["n"]
+    stats = [("Sent", email_counts.get("sent", 0)), ("Queued", email_counts.get("queued", 0)),
+             ("Failed", email_counts.get("failed", 0)), ("Unsubscribed", unsubscribed)]
+    stats_html = "".join(f'<div class="card stat"><div class="stat-label">{l}</div><div class="stat-value">{v}</div></div>' for l, v in stats)
 
-<h2 id="settings">Settings</h2>
-<div class="card"><form method="post" action="/admin/settings">{settings_inputs}<button>Save settings</button></form>
-<p class="muted">Embed the waitlist on any site: <code>&lt;div id="launchkit"&gt;&lt;/div&gt;&lt;script src="{esc(BASE_URL)}/embed.js"&gt;&lt;/script&gt;</code></p></div>
-"""
-    return page("LaunchKit admin", body)
+    rows = []
+    for row in query("SELECT * FROM emails ORDER BY id DESC LIMIT 30"):
+        preview = (f'<details><summary>Preview</summary><div class="post-text">{esc(row["text"])}</div></details>'
+                   if provider == "console" else "")
+        error = f'<div class="over small">{esc(row["error"])}</div>' if row["error"] else ""
+        rows.append(
+            f"<tr><td style='white-space:nowrap'>{esc(row['created_at'].replace('T', ' '))}</td><td>{esc(row['to_email'])}</td>"
+            f"<td>{esc(row['kind'].replace('_', ' '))}</td><td>{esc(row['subject'])}{preview}{error}</td><td>{badge(row['status'])}</td></tr>"
+        )
+    outbox = (f'<table><tr><th>When</th><th>To</th><th>Type</th><th>Subject</th><th>Status</th></tr>{"".join(rows)}</table>'
+              if rows else '<div class="empty"><h3>No emails yet</h3><p>Confirmation and welcome emails appear here as people join.</p></div>')
+    content = f"""{delivery}
+<div class="grid g4">{stats_html}</div>
+<div class="grid g2">
+<div class="card"><div class="card-head"><div><h3>Email your waitlist</h3><p>Goes to {plural(audience, "confirmed subscriber")} &middot; unsubscribe link added automatically</p></div></div>
+<div class="card-body"><form method="post" action="/admin/broadcast">
+<div class="field"><label>Subject</label><input name="subject" value="{esc(prefill_subject)}" placeholder="{{product}} is live - you're #{{position}}" required></div>
+<div class="field"><label>Message</label><textarea name="body" required style="min-height:170px" placeholder="Hi {{name}},&#10;&#10;We're launching!&#10;&#10;Your spot: {{status_link}}&#10;Your invite link: {{referral_link}}">{esc(prefill_body)}</textarea>
+<span class="help">Personalise with {{name}}, {{position}}, {{referral_link}}, {{status_link}} and {{product}}.</span></div>
+<div class="field"><label>Send a test first (optional)</label><input name="test_address" type="email" placeholder="you@example.com">
+<span class="help">If filled in, only this address gets the email.</span></div>
+<div class="row" style="justify-content:flex-end"><button class="btn" onclick="return this.form.test_address.value || confirm('Send to {audience} people?')">Send email</button></div>
+</form></div></div>
+<div class="stack"><div class="card"><div class="card-head"><div><h3>Check delivery</h3><p>Send yourself a test email</p></div></div>
+<div class="card-body"><form method="post" action="/admin/test-email" class="row"><input class="grow" name="to" type="email" placeholder="you@example.com" required>
+<button class="btn btn-secondary">Send test</button></form></div></div>
+<div class="card"><div class="card-head"><div><h3>Confirmation emails</h3><p>Referrals only count after a friend confirms</p></div>
+<span class="badge dot {'b-on' if REQUIRE_VERIFICATION else 'b-off'}">{'On' if REQUIRE_VERIFICATION else 'Off'}</span></div>
+<div class="card-body"><form method="post" action="/admin/emails/retry" class="row between"><span class="muted small">{plural(email_counts.get('failed', 0), 'failed email')}</span>
+<button class="btn btn-secondary btn-sm">Retry failed</button></form></div></div></div>
+</div>
+<div class="card"><div class="card-head"><div><h3>Outbox</h3><p>Latest 30 emails</p></div></div>{outbox}</div>"""
+    return admin_shell("emails", "Emails", "Confirmation, welcome and reward emails, plus announcements to your list", content, message)
+
+
+def settings_page(message=""):
+    cfg = settings()
+    groups = []
+    for group_title, fields in SETTING_FIELDS:
+        inputs = "".join(
+            f"""<div class="field"><label for="s-{key}">{esc(label)}</label>
+<input id="s-{key}" name="{key}" type="{kind}" value="{esc(cfg.get(key, ''))}"><span class="help">{esc(help_text)}</span></div>"""
+            for key, label, help_text, kind in fields
+        )
+        groups.append(f'<div class="card"><div class="card-head"><h3>{group_title}</h3></div><div class="card-body">{inputs}</div></div>')
+    env_rows = [
+        ("Email delivery", email_provider() != "console", {"resend": "Resend", "smtp": f"SMTP {esc(SMTP_HOST)}", "console": "Not set - RESEND_API_KEY or SMTP_HOST"}[email_provider()]),
+        ("AI writer", AI_ENABLED, esc(AI_MODEL) if AI_ENABLED else "Not set - AI_API_KEY"),
+        ("Bluesky", bool(BSKY_HANDLE and BSKY_APP_PASSWORD), esc(BSKY_HANDLE) or "Not set - BSKY_HANDLE, BSKY_APP_PASSWORD"),
+        ("Discord", bool(DISCORD_WEBHOOK), "Webhook set" if DISCORD_WEBHOOK else "Not set - DISCORD_WEBHOOK"),
+        ("Time zone", True if TIMEZONE else None, esc(TIMEZONE) or "This computer's clock"),
+        ("Backups", BACKUP_KEEP > 0, f"Daily, keeps {BACKUP_KEEP}" if BACKUP_KEEP > 0 else "Off"),
+    ]
+    env_html = "".join(
+        f'<tr><td><b style="color:var(--text)">{name}</b><div class="muted small">{detail}</div></td>'
+        f'<td style="text-align:right">{status_badge(on)}</td></tr>'
+        for name, on, detail in env_rows
+    )
+    embed = f'<div id="launchkit"></div><script src="{BASE_URL}/embed.js"></script>'
+    content = f"""<div class="grid g2" style="align-items:start">
+<form method="post" action="/admin/settings" class="stack">{''.join(groups)}
+<div class="row" style="justify-content:flex-end"><button class="btn btn-lg">Save settings</button></div></form>
+<div class="stack">
+<div class="card"><div class="card-head"><div><h3>Integrations</h3><p>Set in the <code>.env</code> file next to the app, then restart</p></div></div>
+<table>{env_html}</table></div>
+<div class="card"><div class="card-head"><div><h3>Embed on your website</h3><p>Adds the signup form to any page</p></div></div>
+<div class="card-body"><div class="row"><input id="embed" class="grow" readonly value="{esc(embed)}" onclick="this.select()">
+<button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('embed').value);this.innerText='Copied!'">Copy</button></div></div></div>
+</div></div>"""
+    return admin_shell("settings", "Settings", "Your product details, sharing and privacy", content, message)
 
 
 def post_stats():
@@ -1621,100 +1968,122 @@ def marketing_page(message=""):
             totals[1] += clicks
             totals[2] += signups
 
-    def stats_rows(table, label):
+    def stats_table(table, label, first_heading):
         rows = sorted(table.items(), key=lambda item: (-item[1][2], -item[1][1]))
-        return "".join(
+        if not rows:
+            return '<div class="empty small">No posts yet - create some on the Posts page.</div>'
+        body = "".join(
             f"<tr><td>{esc(label(key))}</td><td>{n_posts}</td><td>{clicks}</td><td>{signups}</td><td>{conversion(signups, clicks)}</td></tr>"
             for key, (n_posts, clicks, signups) in rows
-        ) or '<tr><td class="muted">No posts yet</td></tr>'
+        )
+        return (f'<table class="num-table"><tr><th>{first_heading}</th><th>Posts</th><th>Clicks</th><th>Signups</th><th>Conv.</th></tr>'
+                f'{body}</table>')
 
-    campaign_html = stats_rows(by_campaign, lambda key: campaigns.get(key, "No campaign"))
-    platform_html = stats_rows(by_platform, lambda key: key)
+    campaign_html = stats_table(by_campaign, lambda key: campaigns.get(key, "No campaign"), "Campaign")
+    platform_html = stats_table(by_platform, lambda key: PLATFORM_LABELS.get(key, key), "Platform")
+
+    total_clicks_all = sum(clicks_by_post.values())
+    total_signups_all = sum(signups_by_post.values())
+    kpis = [
+        ("Tracked clicks", total_clicks_all, "Unique visitors from your posts"),
+        ("Signups from posts", total_signups_all, "Attributed to a specific post"),
+        ("Conversion", conversion(total_signups_all, total_clicks_all), "Signups per click"),
+        ("Campaigns", len(campaigns), "Plans, launch weeks and your own"),
+    ]
+    kpi_html = "".join(
+        f'<div class="card stat"><div class="stat-label">{l}</div><div class="stat-value">{v}</div><div class="stat-hint">{h}</div></div>'
+        for l, v, h in kpis
+    )
 
     ranked_posts = sorted(
         (post for post in posts if clicks_by_post.get(post["link_code"]) or signups_by_post.get(post["link_code"])),
         key=lambda post: (-signups_by_post.get(post["link_code"], 0), -clicks_by_post.get(post["link_code"], 0)),
     )[:10]
-    top_html = "".join(
-        f"<tr><td>{esc(post['platform'])}</td><td>{esc(render_live(post['body'], post['platform'], post['link_code'])[:110])}</td>"
-        f"<td>{clicks_by_post.get(post['link_code'], 0)}</td><td>{signups_by_post.get(post['link_code'], 0)}</td>"
-        f"<td>{conversion(signups_by_post.get(post['link_code'], 0), clicks_by_post.get(post['link_code'], 0))}</td></tr>"
-        for post in ranked_posts
-    ) or '<tr><td class="muted">No clicks yet - share posts from the Social section to start collecting data.</td></tr>'
+    if ranked_posts:
+        top_rows = "".join(
+            f"<tr><td>{PLATFORM_LABELS.get(post['platform'], post['platform'])}</td>"
+            f"<td style='text-align:left'>{esc(shorten(render_live(post['body'], post['platform'], post['link_code']), 120))}</td>"
+            f"<td>{clicks_by_post.get(post['link_code'], 0)}</td><td>{signups_by_post.get(post['link_code'], 0)}</td>"
+            f"<td>{conversion(signups_by_post.get(post['link_code'], 0), clicks_by_post.get(post['link_code'], 0))}</td></tr>"
+            for post in ranked_posts
+        )
+        top_html = (f'<table class="num-table"><tr><th>Platform</th><th style="text-align:left">Post</th><th>Clicks</th>'
+                    f'<th>Signups</th><th>Conv.</th></tr>{top_rows}</table>')
+    else:
+        top_html = ('<div class="empty"><h3>No clicks yet</h3><p>Share posts from the Posts page - every post has its own '
+                    'tracked link, so results show up here.</p><a class="btn btn-secondary" href="/admin/posts">Go to posts</a></div>')
 
     since = (local_now() - timedelta(days=30)).isoformat(timespec="seconds")
     hourly = {row["hour"]: row["n"] for row in query(
         "SELECT substr(created_at, 12, 2) AS hour, COUNT(*) AS n FROM clicks WHERE created_at >= ? GROUP BY hour", (since,)
     )}
-    max_hourly = max(hourly.values() or [1])
-    hours_html = "".join(
-        f'<tr><td>{hour:02d}:00</td><td style="width:80%"><div class="bar" style="width:{100 * hourly.get(f"{hour:02d}", 0) / max_hourly:.0f}%"></div></td>'
-        f'<td>{hourly.get(f"{hour:02d}", 0)}</td></tr>'
+    max_hourly = max(list(hourly.values()) + [1])
+    hours_chart = "".join(
+        f'<div class="col" title="{hour:02d}:00 - {plural(hourly.get(f"{hour:02d}", 0), "click")}">'
+        f'<div class="bar {"zero" if not hourly.get(f"{hour:02d}") else ""}" style="height:{max(3, 100 * hourly.get(f"{hour:02d}", 0) / max_hourly):.0f}%"></div>'
+        f'<span class="lbl">{hour if hour % 3 == 0 else ""}</span></div>'
         for hour in range(24)
     )
     total_clicks = sum(hourly.values())
     if total_clicks >= 30:
         best = sorted(hourly.items(), key=lambda item: -item[1])[:3]
-        best_text = "Your audience clicks most at " + ", ".join(f"{hour}:00" for hour, _ in best) + " (server time). Schedule posts just before these hours."
+        best_text = "Your audience clicks most at " + ", ".join(f"{hour}:00" for hour, _ in best) + ". Schedule posts just before these hours."
     else:
-        best_text = f"Only {total_clicks} clicks in the last 30 days - recommendations appear after 30. Until then, test different posting times."
+        best_text = f"{plural(total_clicks, 'click')} in the last 30 days - a recommendation appears after 30. Until then, try different posting times."
 
     tasks = query("SELECT * FROM tasks ORDER BY done, due_date, id")
-    tasks_html = "".join(
-        f"""<tr><td>{esc(task['due_date'])}</td><td><b style="{'text-decoration:line-through;color:#8b93a5' if task['done'] else ''}">{esc(task['title'])}</b>
-<div class="muted">{esc(task['details'] or '')}</div>{f'<a href="{esc(task["action_url"])}">Open</a>' if task['action_url'] else ''}</td>
-<td><form method="post" action="/admin/task/{task['id']}/toggle"><button class="btn alt">{'Undo' if task['done'] else 'Done'}</button></form></td></tr>"""
-        for task in tasks
-    ) or '<tr><td class="muted">No tasks yet - generate a launch campaign.</td></tr>'
+    if tasks:
+        task_items = "".join(
+            f"""<li class="{'done' if task['done'] else ''}"><form method="post" action="/admin/task/{task['id']}/toggle">
+<button class="check" style="cursor:pointer;background:{'var(--success)' if task['done'] else 'transparent'}" title="{'Mark as not done' if task['done'] else 'Mark as done'}">{'✓' if task['done'] else ''}</button></form>
+<div class="grow"><div class="step-title" style="font-weight:600">{esc(task['title'])}</div><div class="muted small">{esc(task['details'] or '')}</div></div>
+<div style="text-align:right"><div class="muted small" style="white-space:nowrap">{esc(nice_date(task['due_date']))}</div>
+{f'<a class="btn btn-secondary btn-sm" style="margin-top:6px" href="{esc(task["action_url"])}">Open</a>' if task['action_url'] else ''}</div></li>"""
+            for task in tasks
+        )
+        tasks_html = f'<ul class="steps" style="margin-top:-1px">{task_items}</ul>'
+    else:
+        tasks_html = '<div class="empty small">No tasks yet - generate a launch campaign to get a step-by-step checklist.</div>'
 
-    platform_checks = "".join(
-        f'<label style="margin-right:12px"><input type="checkbox" name="platforms" value="{p}" {"checked" if p in ("x", "linkedin", "reddit") else ""}> {p}</label>'
-        for p in PLATFORM_LIMITS
-    )
-    with ai_jobs_lock:
-        pending_ai = ai_jobs["pending"]
-    notices = f'<div class="notice ok wide">{esc(message)}</div>' if message else ""
-    if pending_ai:
-        notices += f'<div class="notice wide">AI is writing {pending_ai} more post(s) in the background - they appear in Admin -> Social.</div>'
-    ai_checkbox = '<label><input type="checkbox" name="use_ai" checked> Write with AI</label><br>' if AI_ENABLED else ""
-    repurpose_html = (
-        f"""<form method="post" action="/admin/repurpose">
-<textarea name="source" required placeholder="Paste a changelog, blog post, release notes or a long brain-dump..."></textarea>
-{platform_checks}<select name="campaign_id">{campaign_options()}</select><button>Create drafts</button></form>"""
-        if AI_ENABLED else '<p class="muted">Needs the AI writer - set AI_API_KEY (or AI_BASE_URL for Ollama).</p>'
-    )
+    ai_toggle = '<label class="toggle"><input type="checkbox" name="use_ai" checked> Write with AI</label>' if AI_ENABLED else "<span></span>"
+    if AI_ENABLED:
+        repurpose_html = f"""<form method="post" action="/admin/repurpose">
+<div class="field"><label>Source content</label><textarea name="source" required placeholder="Paste a changelog, blog post, release notes or a brain-dump..."></textarea></div>
+<div class="field"><span class="label">Create drafts for</span><div class="chips">{platform_chips(("x", "linkedin", "reddit"))}</div></div>
+<div class="row"><div class="field grow" style="margin:0"><select name="campaign_id">{campaign_options()}</select></div><button class="btn">Create drafts</button></div></form>"""
+    else:
+        repurpose_html = ('<div class="empty small"><h3>Needs the AI writer</h3><p>Add <code>AI_API_KEY</code> (or <code>AI_BASE_URL</code> '
+                          'for a local Ollama) to <code>.env</code> and restart.</p></div>')
 
-    body = f"""
-<nav><b>LaunchKit</b> &nbsp; <a href="/admin">Dashboard</a><a href="/admin#social">Posts</a><a href="/" target="_blank">Landing page</a></nav>
-{notices}
-<h2>Marketing</h2>
-<p class="muted">Every post uses its own tracked link (<code>{esc(BASE_URL)}/go/...</code>). Clicks from link-preview bots are ignored;
-signups are attributed to the post the visitor came from{' (confirmed signups only)' if REQUIRE_VERIFICATION else ''}.</p>
-<div class="grid2">
- <div class="card"><b>Campaigns</b><table><tr><th>Campaign</th><th>Posts</th><th>Clicks</th><th>Signups</th><th>Conv.</th></tr>{campaign_html}</table></div>
- <div class="card"><b>Platforms</b><table><tr><th>Platform</th><th>Posts</th><th>Clicks</th><th>Signups</th><th>Conv.</th></tr>{platform_html}</table></div>
+    content = f"""{ai_progress_html()}
+<div class="grid g4">{kpi_html}</div>
+<div class="grid g2">
+<div class="card"><div class="card-head"><div><h3>Campaigns</h3><p>Which campaigns bring signups</p></div></div>{campaign_html}</div>
+<div class="card"><div class="card-head"><div><h3>Platforms</h3><p>Where your audience responds</p></div></div>{platform_html}</div>
 </div>
-<div class="card"><b>Top posts</b><table><tr><th>Platform</th><th>Post</th><th>Clicks</th><th>Signups</th><th>Conv.</th></tr>{top_html}</table></div>
-
-<div class="grid2">
-<div class="card"><b>Launch-week campaign</b>
-<p class="muted">Posts from 7 days before to 7 days after your launch date ({esc(cfg['launch_date'])}) on the selected platforms,
-plus a launch checklist (Product Hunt, Show HN, launch email). Past dates are skipped.</p>
-<form method="post" action="/admin/launch">{platform_checks}
-<label class="muted">Post time</label><input type="time" name="time" value="09:00">
-{ai_checkbox}<button>Generate launch campaign</button></form></div>
-<div class="card"><b>Repurpose content with AI</b>
-<p class="muted">One piece of content in, a native draft for each selected platform out.</p>{repurpose_html}</div>
+<div class="card"><div class="card-head"><div><h3>Top posts</h3><p>Ranked by signups, then clicks</p></div></div>{top_html}</div>
+<div class="grid g2" style="align-items:start">
+<div class="card"><div class="card-head"><div><h3>Launch-week campaign</h3><p>Posts from 7 days before to 7 days after {esc(nice_date(cfg['launch_date']))}, plus a launch checklist</p></div></div>
+<div class="card-body"><form method="post" action="/admin/launch">
+<div class="field"><span class="label">Platforms</span><div class="chips">{platform_chips(("x", "linkedin", "reddit"))}</div></div>
+<div class="field"><label>Post time</label><input type="time" name="time" value="09:00" style="max-width:180px"></div>
+<div class="row between">{ai_toggle}<button class="btn">Generate launch campaign</button></div>
+<p class="help" style="margin-top:10px">Dates already in the past are skipped. Change the launch date in Settings.</p></form></div></div>
+<div class="card"><div class="card-head"><div><h3>Repurpose with AI</h3><p>One piece of content in, a native draft per platform out</p></div></div>
+<div class="card-body">{repurpose_html}</div></div>
 </div>
-<div class="grid2">
-<div class="card"><b>Launch checklist</b><table>{tasks_html}</table></div>
-<div class="card"><b>New campaign</b><form method="post" action="/admin/campaign"><input name="name" placeholder="e.g. Beta announcement" required>
-<button class="btn alt">Create</button></form>
-<p class="muted">Assign posts to it when composing. Content plans and launch campaigns create their own.</p>
-<b>Best time to post</b><p class="muted">{esc(best_text)}</p><table>{hours_html}</table></div>
-</div>
-"""
-    return page("LaunchKit marketing", body)
+<div class="grid g2" style="align-items:start">
+<div class="card"><div class="card-head"><div><h3>Launch checklist</h3><p>Tick items off as you go</p></div></div>{tasks_html}</div>
+<div class="stack">
+<div class="card"><div class="card-head"><div><h3>Best time to post</h3><p>{esc(best_text)}</p></div></div>
+<div class="card-body"><div class="chart" style="height:110px;gap:3px">{hours_chart}</div></div></div>
+<div class="card"><div class="card-head"><div><h3>New campaign</h3><p>Group posts to compare results</p></div></div>
+<div class="card-body"><form method="post" action="/admin/campaign" class="row"><input class="grow" name="name" placeholder="e.g. Beta announcement" required>
+<button class="btn btn-secondary">Create</button></form></div></div>
+</div></div>"""
+    subtitle = ("Every post gets its own tracked link, so you can see which posts bring signups"
+                + (" (confirmed signups only)" if REQUIRE_VERIFICATION else ""))
+    return admin_shell("marketing", "Marketing", subtitle, content, message)
 
 
 EMBED_JS = """(function(){
@@ -1764,8 +2133,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def admin_redirect(self, message="", anchor=""):
-        target = "/admin" + (f"?msg={urllib.parse.quote(message)}" if message else "") + anchor
-        self.redirect(target)
+        target = {"#social": "/admin/posts", "#emails": "/admin/emails", "#settings": "/admin/settings"}.get(anchor, "/admin")
+        self.redirect(target + (f"?msg={urllib.parse.quote(message)}" if message else ""))
 
     def marketing_redirect(self, message=""):
         self.redirect("/admin/marketing" + (f"?msg={urllib.parse.quote(message)}" if message else ""))
@@ -1851,9 +2220,19 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/admin":
             if not self.is_admin():
                 return self.send(200, admin_login_page())
-            return self.send(200, admin_page(
-                params.get("msg", [""])[0], params.get("bs", [""])[0], params.get("bb", [""])[0]
-            ))
+            if "bs" in params or "bb" in params:  # launch-email links from older checklists
+                prefill = urllib.parse.urlencode({"bs": params.get("bs", [""])[0], "bb": params.get("bb", [""])[0]})
+                return self.redirect(f"/admin/emails?{prefill}")
+            return self.send(200, overview_page(params.get("msg", [""])[0]))
+        if path in ("/admin/posts", "/admin/emails", "/admin/settings"):
+            if not self.is_admin():
+                return self.redirect("/admin")
+            message = params.get("msg", [""])[0]
+            if path == "/admin/posts":
+                return self.send(200, posts_page(message))
+            if path == "/admin/emails":
+                return self.send(200, emails_page(message, params.get("bs", [""])[0], params.get("bb", [""])[0]))
+            return self.send(200, settings_page(message))
         if path == "/admin/marketing":
             if not self.is_admin():
                 return self.redirect("/admin")
@@ -2048,7 +2427,7 @@ class Handler(BaseHTTPRequestHandler):
                 "Email delivery works.",
                 kind="test",
             )
-            return self.admin_redirect("Test email queued - check the list below", "#emails")
+            return self.admin_redirect("Test email queued - check the outbox below", "#emails")
 
         if path == "/admin/emails/retry":
             count = execute("UPDATE emails SET status = 'queued', error = NULL WHERE status = 'failed'").rowcount

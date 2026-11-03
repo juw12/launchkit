@@ -18,8 +18,16 @@ Your data stays in `launchkit.db` next to the app. On Mac/Linux: `python3 app.py
 2. `python launchkit.py` (or `start.bat`)
 3. Landing page: http://localhost:8000 - Admin: http://localhost:8000/admin
 
+## The admin
+A clean dashboard with a sidebar (light and dark mode follow your system setting):
+- **Overview** - getting-started checklist, waitlist numbers, 14-day signup chart, top referrers, setup status
+- **Posts** - write, schedule and auto-post build-in-public content; share links for every platform
+- **Marketing** - tracked-link analytics, campaigns, launch-week plan and checklist, AI repurposing
+- **Emails** - broadcast to your waitlist, test delivery, outbox
+- **Settings** - product details, sharing, privacy, integration status and the embed code
+
 ## The growth loop
-1. Post build-in-public content (Admin -> Social). AI writes it from your notes, or use templates.
+1. Post build-in-public content (Admin -> Posts). AI writes it from your notes, or use templates.
    Links carry ?utm_source=<platform>; {count}, {days_left}, {link} stay live until posting.
 2. Visitor joins -> confirmation email -> confirms -> welcome email with position + referral link.
 3. A friend joins via that link and confirms -> referrer moves up BUMP_PER_REFERRAL spots and gets a
