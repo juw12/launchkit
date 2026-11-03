@@ -1,0 +1,7 @@
+# Caddy gets and renews the HTTPS certificate automatically.
+# 1. Point your domain's DNS (A record) at the server.
+# 2. Replace the domain below, save as /etc/caddy/Caddyfile, run: sudo systemctl reload caddy
+# 3. In LaunchKit's .env: HOST=127.0.0.1, TRUST_PROXY=1, BASE_URL=https://waitlist.example.com
+waitlist.example.com {
+    reverse_proxy 127.0.0.1:8000
+}

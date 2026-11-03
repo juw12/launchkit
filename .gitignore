@@ -1,0 +1,10 @@
+# Secrets and data - never commit
+.env
+*.db
+*.db-journal
+backups/
+
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
