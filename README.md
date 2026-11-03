@@ -1,4 +1,44 @@
-﻿# LaunchKit
+<!-- HERO:START -->
+<p align="center">
+  <a href="https://github.com/juw12/launchkit"><img src="docs/media/banner.jpg" alt="LaunchKit: Promote your app before it's finished." width="100%"></a>
+</p>
+
+<p align="center">
+  <b>Promote your app before it's finished.</b><br>
+  A viral waitlist, reward emails, an AI build-in-public social manager and a launch-week plan.
+</p>
+
+<p align="center">
+  <a href="#highlights">Highlights</a> ·
+  <a href="https://github.com/juw12">More by juw12</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/juw12/launchkit"><img src="https://img.shields.io/github/last-commit/juw12/launchkit?label=updated&color=f97316" alt="Last updated"></a>
+  <img src="https://img.shields.io/badge/Desktop-24292f" alt="Desktop">
+  <img src="https://img.shields.io/badge/Python_%2B_SQLite-24292f" alt="Python + SQLite">
+</p>
+
+<a id="highlights"></a>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <b>Viral waitlist</b><br>
+      Every friend you invite moves you up the line.
+    </td>
+    <td width="33%" valign="top">
+      <b>Know what works</b><br>
+      Tracked links show which post brought each signup.
+    </td>
+    <td width="33%" valign="top">
+      <b>Launch week</b><br>
+      Product Hunt and Show HN checklists, plus an AI social media manager.
+    </td>
+  </tr>
+</table>
+<!-- HERO:END -->
+
+## About
 
 **Pre-launch growth app for indie developers.** Promote your product before it's finished:
 a viral waitlist with referral rewards, confirmation and reward emails, an AI build-in-public
