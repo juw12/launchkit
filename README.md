@@ -134,3 +134,7 @@ Upgrading: replace `launchkit.py` - the database migrates automatically.
 ## Tests
 `run_tests.bat` (or `python -m unittest discover -s tests -v`) - 20 end-to-end tests with fake email/AI
 services; nothing real is sent. Run them after every change.
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Juwen Lie. Contributions are welcome under the same license; see the [contributing guide](https://github.com/juw12/.github/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/juw12/.github/blob/main/CODE_OF_CONDUCT.md).
