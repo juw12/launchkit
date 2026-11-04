@@ -1312,8 +1312,16 @@ color:#fff;font-size:14px;font-weight:800;flex:none}.nav{display:flex;flex-direc
 .savebar{position:sticky;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 -4px 16px rgba(15,23,42,.06)}
 .spacer{flex:1}.topbar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:30px 36px 0;max-width:1200px}
 .content{padding:22px 36px 56px;max-width:1200px}
-@media(max-width:860px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
-.nav{flex-direction:row;flex-wrap:wrap}.nav-section,.spacer{display:none}.topbar,.content{padding-left:18px;padding-right:18px}}
+@media(max-width:860px){.app{grid-template-columns:minmax(0,1fr)}
+.sidebar{position:sticky;top:0;z-index:10;height:auto;padding:10px 12px 8px;border-right:0;border-bottom:1px solid var(--border)}
+.brand{padding:2px 6px 8px}.nav{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}.nav a{white-space:nowrap;padding:7px 10px}
+.nav-section,.spacer{display:none}.nav.shortcuts{margin-top:2px}.nav.shortcuts a{font-size:12.5px;color:var(--muted);padding:5px 10px}
+.topbar{flex-direction:column;align-items:stretch;padding:20px 16px 0}.topbar h1{font-size:22px}
+.content{padding:16px 16px 40px}.card{overflow-x:auto}
+.steps li{flex-wrap:wrap;padding:12px 16px}.steps li>.btn{margin-left:36px}
+.card-head{padding:14px 16px}.card-body{padding:16px}.stat{padding:14px 16px}.stat-value{font-size:24px}
+th,td{padding:10px 14px}.savebar{flex-direction:column;align-items:stretch}}
 .steps{list-style:none;margin:0;padding:0}.steps li{display:flex;align-items:center;gap:14px;padding:13px 20px;border-top:1px solid var(--border)}
 .check{width:22px;height:22px;padding:0;border-radius:50%;border:2px solid var(--border-strong);flex:none;display:grid;place-items:center;color:#fff}
 .done .check{background:var(--success);border-color:var(--success)}.done .step-title{color:var(--muted);text-decoration:line-through}
@@ -1667,7 +1675,7 @@ def admin_shell(active, title, subtitle, content, message="", actions=""):
 <aside class="sidebar"><div class="brand"><span class="logo">L</span>LaunchKit</div>
 <nav class="nav">{nav}</nav><div class="spacer"></div>
 <div class="nav-section">Shortcuts</div>
-<nav class="nav"><a href="/" target="_blank">{icon('external')}Public page</a>
+<nav class="nav shortcuts"><a href="/" target="_blank">{icon('external')}Public page</a>
 <a href="/admin/export.csv">{icon('download')}Export CSV</a><a href="/admin/backup.db">{icon('download')}Download backup</a>
 <a href="/admin/logout">{icon('logout')}Log out</a></nav></aside>
 <main><header class="topbar"><div><h1>{esc(title)}</h1><p class="muted" style="margin-top:4px">{subtitle}</p></div>
