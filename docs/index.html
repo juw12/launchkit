@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LaunchKit guide: Promote an app before it ships</title>
+<meta name="description" content="Promote an app before it ships">
+<link rel="canonical" href="https://juw12.github.io/launchkit/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="LaunchKit">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fbfaf6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="LaunchKit guide">
+<meta property="og:description" content="Promote an app before it ships">
+<style>
+:root{--paper:#fbfaf6;--ink:#1d1c1a;--soft:#5d5a54;--line:#e3dfd5;--card:#ffffff;--accent:#952391;--code:#f1eee6}
+@media (prefers-color-scheme:dark){:root{--paper:#171614;--ink:#eeebe4;--soft:#a9a49a;--line:#35322d;--card:#201f1c;--accent:#e085dd;--code:#262420}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px;padding-top:max(8px,env(safe-area-inset-top));background:var(--paper);border-bottom:1px solid var(--line)}
+header.bar img{width:36px;height:36px;border-radius:9px;flex:none}
+header.bar .name{font-weight:700;font-size:18px;line-height:1.2;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header.bar .name small{display:block;font-weight:500;font-size:13px;color:var(--soft)}
+header.bar a.source{flex:none;display:inline-flex;align-items:center;min-height:48px;padding:0 16px;border:1px solid var(--line);border-radius:24px;background:var(--card);color:var(--ink);font-size:15px;font-weight:600;text-decoration:none}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+main img{max-width:100%;height:auto;border-radius:8px}
+main h1{font-size:30px;line-height:1.2;margin:24px 0 12px}
+main h2{font-size:23px;line-height:1.25;margin:36px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+main h3{font-size:19px;line-height:1.3;margin:26px 0 8px}
+main h4{font-size:17px;margin:22px 0 6px}
+main p,main li{overflow-wrap:anywhere}
+main a{color:var(--accent);text-underline-offset:3px;padding:6px 0}
+main p[align=center] a,main li>a:only-child{display:inline-block;padding:11px 3px}
+main a:has(>img){display:inline-block;padding:8px 0}
+main p[align=center] a:has(>img[width="100%"]){display:block;padding:0}
+main ul,main ol{padding-left:24px}
+main li{margin:6px 0}
+main blockquote{margin:16px 0;padding:4px 16px;border-left:4px solid var(--accent);color:var(--soft)}
+main code{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:2px 5px;border-radius:5px;overflow-wrap:anywhere}
+main pre{background:var(--code);padding:14px;border-radius:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+main pre code{background:none;padding:0;overflow-wrap:normal;white-space:pre}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0}
+main table{border-collapse:collapse;font-size:15px;min-width:100%}
+main th,main td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+main th{background:var(--code)}
+main hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+main kbd{font:13px ui-monospace,Menlo,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 5px}
+main details{margin:12px 0}
+main summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
+footer{max-width:760px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom));border-top:1px solid var(--line);color:var(--soft);font-size:14px}
+footer a{color:var(--soft)}
+</style>
+</head>
+<body>
+<header class="bar">
+<img src="icons/icon-192.png" alt="" width="36" height="36">
+<div class="name">LaunchKit<small>Guide</small></div>
+<a class="source" href="https://github.com/juw12/launchkit">GitHub</a>
+</header>
+<main id="guide">
+
+<p align="center" dir="auto">
+  <a href="https://github.com/juw12/launchkit"><img loading="lazy" src="media/banner.jpg" alt="LaunchKit: Promote your app before it's finished." width="100%" style="max-width: 100%;"></a>
+</p>
+<p align="center" dir="auto">
+  <b>Promote your app before it's finished.</b><br>
+  A viral waitlist, reward emails, an AI build-in-public social manager and a launch-week plan.
+</p>
+<p align="center" dir="auto">
+  <a href="#highlights">Highlights</a> ·
+  <a href="https://github.com/juw12">More by juw12</a>
+</p>
+<p align="center" dir="auto">
+  <a href="https://github.com/juw12/launchkit"><img loading="lazy" src="https://img.shields.io/github/last-commit/juw12/launchkit?label=updated&amp;color=f97316" alt="Last updated"  style="max-width: 100%;"></a>
+  <a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/ee8f0064759558dc4e4753bd7d42a4fa7c9eb06269cd59719adb41fd067f7913/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4465736b746f702d323432393266"><img loading="lazy" src="https://img.shields.io/badge/Desktop-24292f" alt="Desktop"  style="max-width: 100%;"></a>
+  <a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/4d7c4b9ff95822045ac33337f2b67dc2a70d48c05b46b732c02b24994e3a10a9/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f507974686f6e5f2532425f53514c6974652d323432393266"><img loading="lazy" src="https://img.shields.io/badge/Python_%2B_SQLite-24292f" alt="Python + SQLite"  style="max-width: 100%;"></a>
+</p>
+<p dir="auto"><a id="highlights"></a></p>
+<markdown-accessiblity-table><div class="scroll"><table role="table">
+  <tbody><tr>
+    <td width="33%" valign="top">
+      <b>Viral waitlist</b><br>
+      Every friend you invite moves you up the line.
+    </td>
+    <td width="33%" valign="top">
+      <b>Know what works</b><br>
+      Tracked links show which post brought each signup.
+    </td>
+    <td width="33%" valign="top">
+      <b>Launch week</b><br>
+      Product Hunt and Show HN checklists, plus an AI social media manager.
+    </td>
+  </tr>
+</tbody></table></div></markdown-accessiblity-table>
+
+<h2 dir="auto">About</h2>
+<p dir="auto"><strong>Pre-launch growth app for indie developers.</strong> Promote your product before it's finished:<br>
+a viral waitlist with referral rewards, confirmation and reward emails, an AI build-in-public<br>
+social media manager, tracked links that show which posts bring signups, and a launch-week<br>
+campaign planner. One Python file, standard library only, SQLite.</p>
+<h2 dir="auto">Run it as a desktop app (Windows)</h2>
+<ol dir="auto">
+<li>Install <a href="https://www.python.org/downloads/" rel="nofollow">Python 3.10+</a> (tick "Add python.exe to PATH").</li>
+<li>Double-click <code class="notranslate">LaunchKit.bat</code>.</li>
+</ol>
+<p dir="auto">It opens in its own window, already logged in. The first run creates <code class="notranslate">.env</code> with a random admin<br>
+password; edit <code class="notranslate">.env</code> to add email (Resend or SMTP) and AI keys. Close the console window to stop.<br>
+Your data stays in <code class="notranslate">launchkit.db</code> next to the app. On Mac/Linux: <code class="notranslate">python3 app.py</code>.</p>
+<h2 dir="auto">Run it as a server</h2>
+<ol dir="auto">
+<li>Copy <code class="notranslate">.env.example</code> to <code class="notranslate">.env</code> and set at least <code class="notranslate">ADMIN_TOKEN</code> (12+ characters)</li>
+<li><code class="notranslate">python launchkit.py</code> (or <code class="notranslate">start.bat</code>)</li>
+<li>Landing page: <a href="http://localhost:8000" rel="nofollow">http://localhost:8000</a> - Admin: <a href="http://localhost:8000/admin" rel="nofollow">http://localhost:8000/admin</a></li>
+</ol>
+<h2 dir="auto">The admin</h2>
+<p dir="auto">A clean dashboard with a sidebar (light and dark mode follow your system setting):</p>
+<ul dir="auto">
+<li><strong>Overview</strong> - getting-started checklist, waitlist numbers, 14-day signup chart, top referrers, setup status</li>
+<li><strong>Posts</strong> - write, schedule and auto-post build-in-public content; share links for every platform</li>
+<li><strong>Marketing</strong> - tracked-link analytics, campaigns, launch-week plan and checklist, AI repurposing</li>
+<li><strong>Emails</strong> - broadcast to your waitlist, test delivery, outbox</li>
+<li><strong>Settings</strong> - product details, sharing, privacy, integration status and the embed code</li>
+</ul>
+<h2 dir="auto">The growth loop</h2>
+<ol dir="auto">
+<li>Post build-in-public content (Admin -&gt; Posts). AI writes it from your notes, or use templates.<br>
+Links carry ?utm_source=; {count}, {days_left}, {link} stay live until posting.</li>
+<li>Visitor joins -&gt; confirmation email -&gt; confirms -&gt; welcome email with position + referral link.</li>
+<li>A friend joins via that link and confirms -&gt; referrer moves up BUMP_PER_REFERRAL spots and gets a<br>
+"friend joined" or "reward unlocked" email (1 / 3 / 10 invites - edit MILESTONES in launchkit.py).</li>
+<li>Waitlist hits 10/50/100/250... -&gt; "we hit N" draft posts auto-created -&gt; back to step 1.</li>
+<li>Launch day: Admin -&gt; Emails -&gt; Broadcast to every confirmed subscriber (personalised, with unsubscribe).</li>
+</ol>
+<h2 dir="auto">Marketing (Admin -&gt; Marketing)</h2>
+<ul dir="auto">
+<li><strong>Tracked links</strong>: every post links to <code class="notranslate">/go/&lt;code&gt;</code>. Clicks are counted (link-preview bots ignored, one per<br>
+visitor) and signups are attributed to the post they came from - also when they sign up later (30-day cookie).</li>
+<li><strong>Dashboard</strong>: clicks, signups and conversion per campaign, per platform and per post, plus clicks by hour<br>
+("best time to post", once you have 30+ clicks).</li>
+<li><strong>Campaigns</strong>: content plans and launch campaigns create one automatically; create your own and pick it when composing.</li>
+<li><strong>Launch-week campaign</strong>: posts at launch -7/-3/-1/0/+1/+7 days on the platforms you pick (uses <code class="notranslate">launch_date</code>),<br>
+plus a checklist: launch assets, Product Hunt (day starts 12:01 AM PT), Show HN (must link a working product,<br>
+not a waitlist), switching links to your product, the launch email (opens the broadcast form pre-filled).</li>
+<li><strong>Repurpose with AI</strong>: paste a changelog/blog post -&gt; a native draft for each selected platform.</li>
+<li><strong>Settings</strong>: <code class="notranslate">share_image_url</code> = image for link previews (Open Graph / Twitter cards);<br>
+<code class="notranslate">post_link_target</code> = where post links send people (empty = waitlist page; set to your app after launch).</li>
+</ul>
+<h2 dir="auto">Anti-abuse / privacy</h2>
+<ul dir="auto">
+<li>Referrals only count after the friend confirms their email (REQUIRE_VERIFICATION=1)</li>
+<li>Same-network referrals are not credited; Gmail dots/+tags are de-duplicated; per-IP signup rate limit</li>
+<li>Public referral link (?ref=) is separate from the private status page (/s/)</li>
+<li>Re-entering an existing email never reveals the status page - the link is emailed instead</li>
+<li>Every marketing email has an unsubscribe link + List-Unsubscribe / one-click headers</li>
+</ul>
+<h2 dir="auto">Email delivery</h2>
+<ul dir="auto">
+<li>Resend: set RESEND_API_KEY and EMAIL_FROM on a domain you verified in Resend</li>
+<li>SMTP: set SMTP_HOST / PORT / USER / PASSWORD / SECURITY and EMAIL_FROM</li>
+<li>Neither: "console mode" - emails are printed in the terminal and shown in Admin -&gt; Emails (good for local testing)<br>
+Use Admin -&gt; Emails -&gt; "Send test email" to check delivery.</li>
+</ul>
+<h2 dir="auto">AI writer</h2>
+<p dir="auto">Any OpenAI-compatible chat API: OpenAI, OpenRouter, Groq, Together, or a free local Ollama<br>
+(AI_BASE_URL=<a href="http://localhost:11434/v1" rel="nofollow">http://localhost:11434/v1</a>). Set AI_MODEL to a model your provider offers.<br>
+The AI is told not to invent features/metrics and to use [placeholders] for things you must fill in.</p>
+<h2 dir="auto">Social posting</h2>
+<p dir="auto">Bluesky and Discord post automatically at the scheduled time. X / LinkedIn / Threads / Reddit become<br>
+"due" and get a one-click Share button (their posting APIs need paid/approved developer access).</p>
+<h2 dir="auto">Embed on an existing site</h2>
+<pre class="notranslate"><code class="notranslate">&lt;div id="launchkit"&gt;&lt;/div&gt;&lt;script src="https://YOUR_BASE_URL/embed.js"&gt;&lt;/script&gt;
+</code></pre>
+<h2 dir="auto">Deploy</h2>
+<ol dir="auto">
+<li>A small Linux VPS (or any host that runs Python 3.10+). Copy this folder there.</li>
+<li><code class="notranslate">.env</code>: strong <code class="notranslate">ADMIN_TOKEN</code> (12+ chars - the app refuses to listen publicly with a weak one),<br>
+<code class="notranslate">BASE_URL=https://your-domain</code>, <code class="notranslate">HOST=127.0.0.1</code>, <code class="notranslate">TRUST_PROXY=1</code>, <code class="notranslate">TIMEZONE=&lt;your zone&gt;</code>.</li>
+<li>Put Caddy in front for HTTPS - see <code class="notranslate">Caddyfile.example</code>. Don't expose the app directly: Python's<br>
+built-in server is meant to sit behind a proxy.</li>
+<li>Keep the app running with systemd (or your host's process manager).</li>
+<li>Backups: a copy of the database is made every 24 h into <code class="notranslate">BACKUP_DIR</code> (newest 14 kept). Also copy that<br>
+folder off the server now and then - Admin -&gt; "Download backup" gives you a file instantly.<br>
+Upgrading: replace <code class="notranslate">launchkit.py</code> - the database migrates automatically.</li>
+</ol>
+<h2 dir="auto">Security notes</h2>
+<ul dir="auto">
+<li>Admin login uses a random session cookie; 5 wrong passwords lock that IP out for 15 minutes.<br>
+Changing ADMIN_TOKEN logs out every session.</li>
+<li><code class="notranslate">TRUST_PROXY=1</code> only behind your own proxy - otherwise anyone could fake their IP address.</li>
+<li><code class="notranslate">/privacy</code> is a generated template describing what the app actually collects. Set <code class="notranslate">contact_email</code><br>
+(or <code class="notranslate">privacy_url</code> for your own policy) in Settings, and check the requirements where your users live.</li>
+</ul>
+<h2 dir="auto">Tests</h2>
+<p dir="auto"><code class="notranslate">run_tests.bat</code> (or <code class="notranslate">python -m unittest discover -s tests -v</code>) - 20 end-to-end tests with fake email/AI<br>
+services; nothing real is sent. Run them after every change.</p>
+<h2 dir="auto">License</h2>
+<p dir="auto">Released under the <a href="https://github.com/juw12/launchkit/blob/main/LICENSE">MIT License</a> © 2026 Juwen Lie. Contributions are welcome under the same license; see the <a href="https://github.com/juw12/.github/blob/main/CONTRIBUTING.md">contributing guide</a> and <a href="https://github.com/juw12/.github/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a>.</p>
+</main>
+<footer>
+This is the LaunchKit guide: the project's README, laid out to read on a phone and kept for when there is no connection.
+It is the README of 2026-11-04. LaunchKit itself is installed and run the way the guide says; the code is at
+<a href="https://github.com/juw12/launchkit">github.com/juw12/launchkit</a>.
+</footer>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
